@@ -1,0 +1,532 @@
+/* ============================================================
+ * fey.css — cohesive premium dark interface layer.
+ *
+ * Loaded after each page's legacy inline CSS so the whole app shares
+ * one dark/glass/data-rich language without changing app logic.
+ * ============================================================ */
+
+:root,
+[data-theme="nocturne"],
+[data-theme="aurora"],
+[data-theme="daylight"] {
+  color-scheme: dark;
+  --os-bg-0: #020304;
+  --os-bg-1: #050607;
+  --os-bg-2: #0b0c0e;
+  --os-bg-3: #111216;
+  --os-bg-elevated: rgba(14, 15, 18, 0.94);
+  --os-glass-1: rgba(255, 255, 255, 0.028);
+  --os-glass-2: rgba(255, 255, 255, 0.045);
+  --os-glass-3: rgba(255, 255, 255, 0.072);
+  --os-glass-strong: rgba(255, 255, 255, 0.11);
+  --os-frost: rgba(8, 9, 11, 0.76);
+  --os-text-1: #f3f4f1;
+  --os-text-2: rgba(243, 244, 241, 0.72);
+  --os-text-3: rgba(243, 244, 241, 0.46);
+  --os-text-4: rgba(243, 244, 241, 0.28);
+  --os-text-invert: #050607;
+  --os-border-1: rgba(255, 255, 255, 0.075);
+  --os-border-2: rgba(255, 255, 255, 0.13);
+  --os-border-3: rgba(255, 255, 255, 0.2);
+  --os-hairline: rgba(255, 255, 255, 0.055);
+  --os-accent: #d7d9d3;
+  --os-accent-2: #eef0ea;
+  --os-accent-3: #37e6a2;
+  --os-accent-rgb: 215, 217, 211;
+  --os-success: #37e6a2;
+  --os-success-rgb: 55, 230, 162;
+  --os-warning: #d9b45f;
+  --os-warning-rgb: 217, 180, 95;
+  --os-danger: #ff6d87;
+  --os-danger-rgb: 255, 109, 135;
+  --os-info: #8fb7ff;
+  --os-info-rgb: 143, 183, 255;
+  --os-accent-soft: rgba(255, 255, 255, 0.07);
+  --os-accent-line: rgba(255, 255, 255, 0.18);
+  --os-success-soft: rgba(var(--os-success-rgb), 0.115);
+  --os-success-line: rgba(var(--os-success-rgb), 0.34);
+  --os-warning-soft: rgba(var(--os-warning-rgb), 0.11);
+  --os-warning-line: rgba(var(--os-warning-rgb), 0.28);
+  --os-danger-soft: rgba(var(--os-danger-rgb), 0.105);
+  --os-danger-line: rgba(var(--os-danger-rgb), 0.26);
+  --os-gradient-page:
+    radial-gradient(80% 52% at 50% -16%, rgba(255,255,255,0.075), transparent 64%),
+    radial-gradient(42% 30% at 9% 100%, rgba(var(--os-success-rgb),0.07), transparent 68%),
+    linear-gradient(180deg, #07080b 0%, #020304 100%);
+  --os-gradient-card:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.022));
+  --os-gradient-glass:
+    linear-gradient(140deg, rgba(255,255,255,0.085), rgba(255,255,255,0.025) 62%, rgba(var(--os-success-rgb),0.045));
+  --os-gradient-brand:
+    linear-gradient(135deg, #eff2eb 0%, #c4cbc0 45%, #37e6a2 130%);
+  --os-gradient-dock:
+    linear-gradient(180deg, rgba(36,37,42,0.84), rgba(13,14,17,0.78));
+  --os-shadow-sm: 0 1px 0 rgba(255,255,255,0.045) inset, 0 18px 44px -36px rgba(0,0,0,0.9);
+  --os-shadow-md: 0 1px 0 rgba(255,255,255,0.06) inset, 0 30px 76px -52px rgba(0,0,0,0.96);
+  --os-shadow-lg: 0 1px 0 rgba(255,255,255,0.08) inset, 0 56px 120px -74px rgba(0,0,0,1);
+  --os-shadow-glow: 0 0 52px -34px rgba(var(--os-success-rgb), 0.75);
+  --os-ring-focus: 0 0 0 3px rgba(var(--os-success-rgb), 0.22);
+  --bg: var(--os-bg-1);
+  --bg-elevated: var(--os-bg-3);
+  --surface: var(--os-glass-1);
+  --surface-2: var(--os-glass-2);
+  --fg: var(--os-text-1);
+  --muted: var(--os-text-3);
+  --muted-strong: var(--os-text-2);
+  --border: var(--os-border-1);
+  --border-strong: var(--os-border-2);
+  --brand: var(--os-accent);
+  --brand-2: var(--os-accent-2);
+  --brand-ink: var(--os-text-invert);
+  --brand-soft: var(--os-accent-soft);
+  --brand-line: var(--os-accent-line);
+  --brand-glow: rgba(var(--os-success-rgb), 0.28);
+  --pos: var(--os-success);
+  --pos-soft: var(--os-success-soft);
+  --pos-line: var(--os-success-line);
+  --warn: var(--os-warning);
+  --warn-soft: var(--os-warning-soft);
+  --warn-line: var(--os-warning-line);
+  --neg: var(--os-danger);
+  --neg-soft: var(--os-danger-soft);
+  --neg-line: var(--os-danger-line);
+  --track: rgba(255, 255, 255, 0.075);
+  --card-shadow: var(--os-shadow-md);
+  --glow-1: rgba(255, 255, 255, 0.075);
+  --glow-2: rgba(var(--os-success-rgb), 0.06);
+  --overlay: rgba(2, 3, 4, 0.78);
+}
+
+html {
+  background: #020304;
+}
+
+body {
+  background: #020304 !important;
+  color: var(--os-text-1) !important;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -2;
+  pointer-events: none;
+  background: var(--os-gradient-page);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.28;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.022) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px);
+  background-size: 44px 44px;
+  mask-image: linear-gradient(180deg, transparent 0%, #000 22%, transparent 100%);
+}
+
+.page,
+.os-page,
+main.page {
+  background: transparent !important;
+  color: var(--os-text-1) !important;
+}
+
+.shell,
+.os-shell {
+  max-width: min(1180px, calc(100vw - 32px));
+}
+
+.header,
+.pageHeader,
+.topbar,
+.hero,
+.heroGrid,
+.section,
+.card,
+.heroCard,
+.chartCard,
+.panel,
+.panelCard,
+.empty,
+.emptyState,
+.addCard,
+.importTrigger,
+.dropZone,
+.stats,
+.stat,
+.statCard,
+.metricCard,
+.os-card,
+.os-glass-card,
+.os-stat-card,
+.os-chart-panel,
+.po-sub-section,
+.po-stat-box,
+.po-modal,
+.wt-viewer,
+.settingCard,
+.settingsCard,
+.accountCard,
+.listCard,
+.rowCard,
+[class*="Card"],
+[class*="card"] {
+  border-color: var(--os-border-1) !important;
+  background: var(--os-gradient-card) !important;
+  box-shadow: var(--os-shadow-md) !important;
+}
+
+.card,
+.os-card,
+.launcher-card,
+.snapshot-card,
+.addCard,
+.importTrigger,
+.accountCard,
+.rowCard,
+a[class*="card"],
+a[class*="Card"] {
+  transition:
+    border-color var(--os-duration-2) var(--os-ease-out),
+    background var(--os-duration-2) var(--os-ease-out),
+    box-shadow var(--os-duration-2) var(--os-ease-out),
+    transform var(--os-duration-2) var(--os-ease-out) !important;
+}
+
+.card:hover,
+.os-card:hover,
+.launcher-card:hover,
+.snapshot-card:hover,
+.addCard:hover,
+.importTrigger:hover,
+a[class*="card"]:hover,
+a[class*="Card"]:hover {
+  border-color: var(--os-border-3) !important;
+  background: var(--os-gradient-glass) !important;
+  box-shadow: var(--os-shadow-lg), var(--os-shadow-glow) !important;
+  transform: translateY(-1px);
+}
+
+.title,
+.serifTitle,
+h1,
+h2,
+h3,
+.sectionTitle,
+.os-section-title,
+.cardName,
+.panelTitle,
+.po-sub-title {
+  color: var(--os-text-1) !important;
+  letter-spacing: -0.025em;
+}
+
+.subtitle,
+.heroSub,
+.cardTag,
+.emptyText,
+.emptyBody,
+.sectionCount,
+.setHint,
+.setupNote,
+.panelNote,
+.snapshot-body,
+p {
+  color: var(--os-text-3);
+}
+
+.eyebrow,
+.heroEyebrow,
+.sectionEyebrow,
+.fieldLabel,
+.chartLabel,
+.mini-label,
+.cardStatLabel,
+.panelEyebrow,
+.os-kicker,
+.nwHeroLabel,
+.setLabel,
+.po-stat-label,
+.po-unit,
+.remindersLabel {
+  color: var(--os-text-4) !important;
+  letter-spacing: 0.17em !important;
+}
+
+.eyebrowMark,
+.heroEyebrowMark,
+.tickerPulse,
+.os-status-dot,
+.legendDot,
+.dropIcon,
+.po-accent {
+  background: var(--os-success) !important;
+  box-shadow: 0 0 18px -4px rgba(var(--os-success-rgb), 0.7) !important;
+}
+
+.btn,
+.os-button,
+button,
+.quickAddBtn,
+.iconBtn,
+.panelClose,
+.back,
+.backLink,
+.backArrow,
+.po-btn-primary,
+.po-btn-secondary,
+.wt-viewer-btn,
+.viewerBtn {
+  min-height: 40px;
+  border-color: var(--os-border-1) !important;
+  background: rgba(255,255,255,0.035) !important;
+  color: var(--os-text-2) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.035) inset !important;
+}
+
+.btn:hover,
+.os-button:hover,
+button:hover,
+.quickAddBtn:hover,
+.iconBtn:hover,
+.panelClose:hover,
+.back:hover,
+.backLink:hover,
+.po-btn-secondary:hover {
+  border-color: var(--os-border-3) !important;
+  color: var(--os-text-1) !important;
+  background: rgba(255,255,255,0.07) !important;
+}
+
+.btn-primary,
+.os-button-primary,
+.quickAddBtn,
+.po-btn-primary,
+#csSave {
+  border-color: rgba(var(--os-success-rgb), 0.4) !important;
+  background: var(--os-success) !important;
+  color: #03110b !important;
+  font-weight: 700 !important;
+}
+
+.btn-ghost,
+.os-button-ghost,
+.btn-link,
+.os-button-link {
+  background: rgba(255,255,255,0.035) !important;
+  color: var(--os-text-2) !important;
+}
+
+input,
+select,
+textarea,
+.fieldInput,
+.os-input,
+.os-select,
+.os-textarea,
+.quickAddInput,
+.input,
+.select,
+.inlineEditInput,
+.tunerInput,
+.po-field input,
+.po-field select {
+  border-color: var(--os-border-1) !important;
+  background: rgba(255,255,255,0.035) !important;
+  color: var(--os-text-1) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus,
+.fieldInput:focus,
+.quickAddInput:focus,
+.input:focus,
+.select:focus,
+.inlineEditInput:focus,
+.tunerInput:focus {
+  border-color: rgba(var(--os-success-rgb), 0.5) !important;
+  box-shadow: var(--os-ring-focus) !important;
+  outline: none !important;
+}
+
+.themeSeg,
+.currencySeg,
+.seg,
+.tabs,
+.tabbar,
+.os-tabs,
+.os-segment,
+.po-modal-seg {
+  border-color: var(--os-border-1) !important;
+  background: rgba(255,255,255,0.035) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 24px 70px -50px rgba(0,0,0,0.95) !important;
+}
+
+.themeBtn,
+.currencyBtn,
+.tab,
+.segBtn,
+.ordPill,
+.po-reps-pill,
+.os-tab,
+.os-chip {
+  color: var(--os-text-3) !important;
+}
+
+.themeBtnActive,
+.currencyBtnActive,
+.tab.active,
+.tab.is-active,
+.segBtn.active,
+.segBtn.is-active,
+.po-reps-pill.active,
+.os-tab.is-active {
+  border-color: rgba(var(--os-success-rgb), 0.36) !important;
+  background: rgba(var(--os-success-rgb), 0.16) !important;
+  color: var(--os-text-1) !important;
+}
+
+.themeBtnActive .themeSwatch {
+  box-shadow: 0 0 0 2px #050607, 0 0 0 3px var(--os-success) !important;
+}
+
+.chartGrid,
+.chart,
+svg {
+  color: var(--os-success);
+}
+
+.chartDelta,
+.tiDelta,
+.pos,
+.good,
+[data-tone="good"] {
+  color: var(--os-success) !important;
+}
+
+.warn,
+[data-tone="watch"] {
+  color: var(--os-warning) !important;
+}
+
+.neg,
+.low,
+[data-tone="low"] {
+  color: var(--os-danger) !important;
+}
+
+.overlay,
+.os-overlay,
+#csOverlay {
+  background: rgba(2,3,4,0.78) !important;
+  backdrop-filter: blur(18px) !important;
+  -webkit-backdrop-filter: blur(18px) !important;
+}
+
+.panel,
+.os-modal,
+.os-sheet,
+#csCard {
+  border-color: var(--os-border-2) !important;
+  background: rgba(12,13,16,0.96) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 44px 120px -48px rgba(0,0,0,1) !important;
+}
+
+.empty,
+.emptyState,
+.os-empty-state,
+.dropZone {
+  border-style: dashed !important;
+  color: var(--os-text-3) !important;
+}
+
+#csBtn {
+  border-color: var(--os-border-2) !important;
+  background: rgba(22,23,28,0.76) !important;
+  color: var(--os-text-2) !important;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 24px 70px -44px rgba(0,0,0,1) !important;
+}
+
+#csBtn[data-on="1"] {
+  color: var(--os-success) !important;
+  border-color: var(--os-success-line) !important;
+  background: var(--os-success-soft) !important;
+}
+
+@media (max-width: 760px) {
+  .shell,
+  .os-shell {
+    max-width: calc(100vw - 24px);
+  }
+
+  .header,
+  .pageHeader,
+  .topbar {
+    gap: var(--os-space-4) !important;
+    max-width: 100% !important;
+  }
+
+  .headerRight,
+  .headerControls,
+  .themeSeg,
+  .currencySeg {
+    max-width: 100% !important;
+    flex-wrap: wrap !important;
+  }
+
+  .themeSeg,
+  .currencySeg {
+    overflow-x: auto !important;
+    justify-content: flex-start !important;
+  }
+
+  .card,
+  .section,
+  .panel,
+  .heroCard,
+  .chartCard,
+  .os-card,
+  .os-glass-card,
+  .po-sub-section {
+    border-radius: var(--os-radius-lg) !important;
+  }
+
+  .accountCard,
+  .accountHead,
+  .accountList,
+  .quickAdd,
+  .holdingsFooter {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  .accountsGrid,
+  .accountsWrap,
+  .financeGrid {
+    grid-template-columns: 1fr !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  .quickAdd {
+    grid-template-columns: minmax(0, 1fr) minmax(84px, 0.35fr) 44px !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 1ms !important;
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}

@@ -23,235 +23,686 @@ img{max-width:100%;height:auto}
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="theme.css" />
 <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"nocturne");}catch(e){document.documentElement.setAttribute("data-theme","nocturne");}</script>
 <style>
-/* ============================================================
- * Dashboard — the main dashboard. Bento hub linking every app
- * in the Patron suite + a shared "Today's vitals" tile (Whoop /
- * Apple Watch / Manual). Same token system + 3 themes as the suite.
- * ============================================================ */
-:root {
-  color-scheme: dark;
-  --bg: #0C0C12; --bg-elevated: #15151F;
-  --surface: rgba(255,255,255,0.028); --surface-2: rgba(255,255,255,0.055);
-  --fg: #F3F2F8; --muted: rgba(243,242,248,0.50); --muted-strong: rgba(243,242,248,0.74);
-  --border: rgba(255,255,255,0.08); --border-strong: rgba(255,255,255,0.17);
-  --brand: #8B7CFF; --brand-2: #C7BBFF; --brand-ink: #130E2E;
-  --brand-soft: rgba(139,124,255,0.12); --brand-line: rgba(139,124,255,0.28); --brand-glow: rgba(139,124,255,0.42);
-  --pos: #46E0A8; --pos-soft: rgba(70,224,168,0.12); --pos-line: rgba(70,224,168,0.26);
-  --neg: #FB7185; --neg-soft: rgba(251,113,133,0.12); --neg-line: rgba(251,113,133,0.26);
-  --warn: #FBBF24; --warn-soft: rgba(251,191,36,0.10); --warn-line: rgba(251,191,36,0.26);
-  --track: rgba(255,255,255,0.06);
-  --card-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 18px 44px -30px rgba(0,0,0,0.85);
-  --glow-1: rgba(139,124,255,0.12); --glow-2: rgba(70,224,168,0.05);
-  --grain-opacity: 0.05; --overlay: rgba(6,6,12,0.66);
-  --space-1:.25rem; --space-2:.5rem; --space-3:.75rem; --space-4:1rem;
-  --space-5:1.25rem; --space-6:1.5rem; --space-8:2rem; --space-10:2.5rem; --space-12:3rem; --space-16:4rem;
-  --radius-sm: 8px; --radius-md: 11px; --radius-lg: 18px; --radius-pill: 999px;
-  --text-xs:.75rem; --text-sm:.875rem; --text-base:1rem; --text-lg:1.125rem;
-  --text-xl:1.375rem; --text-2xl:1.75rem; --text-3xl:2.5rem;
-  --ease: cubic-bezier(0.2,0.8,0.2,1); --ease-premium: cubic-bezier(0.16,1,0.3,1);
-  --duration-fast:120ms; --duration:200ms;
-  --font-display:'Space Grotesk'; --font-ui:'Hanken Grotesk'; --font-mono:'JetBrains Mono';
+/* Phase 2 homepage layer: composition only. Tokens and primitives come from theme.css. */
+.dashboard-page {
+  padding-bottom: calc(var(--os-bottom-nav-h) + var(--os-space-10));
 }
-[data-theme="aurora"] {
-  color-scheme: dark;
-  --bg: #080913; --bg-elevated: #12131F;
-  --surface: rgba(150,160,255,0.045); --surface-2: rgba(150,160,255,0.08);
-  --fg: #EEF0FF; --muted: rgba(220,225,255,0.52); --muted-strong: rgba(220,225,255,0.76);
-  --border: rgba(150,160,255,0.11); --border-strong: rgba(150,160,255,0.22);
-  --brand: #8B7BFF; --brand-2: #B9ABFF; --brand-ink: #0A0922;
-  --brand-soft: rgba(139,123,255,0.15); --brand-line: rgba(139,123,255,0.32); --brand-glow: rgba(124,107,255,0.6);
-  --pos: #4FE3D0; --pos-soft: rgba(79,227,208,0.13); --pos-line: rgba(79,227,208,0.28);
-  --neg: #FF6FA5; --neg-soft: rgba(255,111,165,0.13); --neg-line: rgba(255,111,165,0.28);
-  --warn: #FFC65C; --warn-soft: rgba(255,198,92,0.11); --warn-line: rgba(255,198,92,0.28);
-  --track: rgba(160,170,255,0.09);
-  --card-shadow: 0 0 0 1px rgba(140,130,255,0.05) inset, 0 22px 56px -28px rgba(78,60,210,0.55);
-  --glow-1: rgba(124,107,255,0.20); --glow-2: rgba(79,227,208,0.13);
-  --grain-opacity: 0.05; --overlay: rgba(5,6,16,0.7);
+.dashboard-shell {
+  max-width: 1180px;
+  display: grid;
+  gap: var(--os-space-5);
 }
-[data-theme="daylight"] {
-  color-scheme: light;
-  --bg: #F3F2FA; --bg-elevated: #FFFFFF;
-  --surface: #FFFFFF; --surface-2: #FAF9FF;
-  --fg: #171622; --muted: rgba(23,22,34,0.52); --muted-strong: rgba(23,22,34,0.72);
-  --border: rgba(23,22,60,0.10); --border-strong: rgba(23,22,60,0.18);
-  --brand: #6A45FF; --brand-2: #8E6BFF; --brand-ink: #FFFFFF;
-  --brand-soft: rgba(106,69,255,0.08); --brand-line: rgba(106,69,255,0.24); --brand-glow: rgba(106,69,255,0.28);
-  --pos: #0E9E64; --pos-soft: rgba(14,158,100,0.10); --pos-line: rgba(14,158,100,0.26);
-  --neg: #E11D63; --neg-soft: rgba(225,29,99,0.08); --neg-line: rgba(225,29,99,0.24);
-  --warn: #B4690E; --warn-soft: rgba(180,105,14,0.10); --warn-line: rgba(180,105,14,0.24);
-  --track: rgba(23,22,60,0.08);
-  --card-shadow: 0 1px 2px rgba(23,22,60,0.05), 0 16px 34px -24px rgba(23,22,60,0.24);
-  --glow-1: rgba(106,69,255,0.07); --glow-2: rgba(14,158,100,0.04);
-  --grain-opacity: 0.02; --overlay: rgba(28,26,52,0.4);
+.command-hero {
+  min-height: min(74vh, 620px);
+  display: grid;
+  align-content: space-between;
+  gap: var(--os-space-8);
+  position: relative;
+  overflow: hidden;
+  padding: clamp(18px, 4vw, 38px);
+  border-radius: var(--os-radius-2xl);
+  border: 1px solid rgba(255,255,255,0.1);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.018)),
+    radial-gradient(90% 70% at 50% 105%, rgba(var(--os-accent-rgb), 0.18), transparent 66%),
+    linear-gradient(180deg, #050507 0%, #08090d 100%);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.07) inset, 0 50px 120px -70px rgba(0,0,0,0.96);
 }
-
-* { box-sizing: border-box; }
-html, body { margin:0; padding:0; }
-body { background: var(--bg); color: var(--fg); font-family: var(--font-ui), -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; font-size: var(--text-base); -webkit-font-smoothing: antialiased; transition: background var(--duration) var(--ease); }
-.grain-overlay { position: relative; }
-.grain-overlay::after { content:''; position: fixed; inset:0; pointer-events:none; z-index:1; opacity: var(--grain-opacity); mix-blend-mode: overlay; background-image: url("data:image/svg+xml;utf8,<svg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>"); background-size: 200px 200px; }
-.page { position: relative; min-height: 100dvh; background: var(--bg); color: var(--fg); padding: var(--space-8) var(--space-5) var(--space-16); isolation: isolate; }
-.page::before { content:''; position: absolute; inset:0; pointer-events:none; z-index:-1; background: radial-gradient(58% 42% at 82% 6%, var(--glow-1), transparent 70%), radial-gradient(48% 38% at 12% 92%, var(--glow-2), transparent 72%); }
-.shell { max-width: 1080px; margin: 0 auto; }
-
-/* Header */
-.header { display:flex; align-items:flex-end; justify-content:space-between; gap: var(--space-4); margin-bottom: var(--space-8); flex-wrap: wrap; }
-.title { font-family: var(--font-display); font-weight: 600; font-size: var(--text-3xl); line-height: 1.0; letter-spacing: -0.03em; margin: 0; }
-.subtitle { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--muted); margin: 6px 0 0; }
-.themeSeg { display:inline-flex; align-items:center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); padding: 3px; gap: 2px; }
-.themeBtn { appearance:none; background: transparent; border:0; color: var(--muted); font-family: var(--font-ui); font-size: 11px; font-weight: 600; letter-spacing: 0.02em; padding: 5px 11px 5px 8px; border-radius: var(--radius-pill); cursor: pointer; display:inline-flex; align-items:center; gap:6px; transition: background var(--duration) var(--ease-premium), color var(--duration) var(--ease-premium); }
-.themeBtn:hover { color: var(--muted-strong); }
-.themeSwatch { width: 11px; height: 11px; border-radius: 50%; box-shadow: 0 0 0 1px var(--border-strong) inset; flex-shrink:0; }
-.themeBtnActive, .themeBtnActive:hover { background: var(--brand-soft); color: var(--fg); }
-.themeBtnActive .themeSwatch { box-shadow: 0 0 0 2px var(--bg), 0 0 0 3px var(--brand); }
-
-/* Header controls + profile chip */
-.headerControls { display:flex; align-items:center; gap: var(--space-3); flex-wrap: wrap; }
-.profileChip { display:inline-flex; align-items:center; gap: 8px; padding: 5px 13px 5px 6px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-pill); color: var(--fg); font-family: var(--font-ui); font-size: 12px; font-weight: 600; cursor: pointer; transition: border-color var(--duration) var(--ease-premium), background var(--duration) var(--ease-premium); }
-.profileChip:hover { border-color: var(--brand-line); background: var(--brand-soft); }
-.profileChipNew { padding: 7px 14px; color: var(--brand); border-color: var(--brand-line); background: var(--brand-soft); }
-.profileAvatar { display:grid; place-items:center; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
-
-/* Daily reminders */
-.reminders { display:flex; align-items:center; flex-wrap:wrap; gap: var(--space-2); margin-bottom: var(--space-5); }
-.remindersLabel { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); margin-right: var(--space-2); }
-.reminderChip { display:inline-flex; align-items:center; gap: 7px; padding: 7px 12px; border-radius: var(--radius-pill); border: 1px solid var(--warn-line); background: var(--warn-soft); color: var(--fg); font-size: 12px; font-weight: 600; text-decoration: none; transition: border-color var(--duration) var(--ease-premium), background var(--duration) var(--ease-premium), transform var(--duration) var(--ease-premium); }
-.reminderChip:hover { border-color: var(--warn); transform: translateY(-1px); }
-.reminderDot { width: 6px; height: 6px; border-radius: 50%; background: var(--warn); box-shadow: 0 0 8px var(--warn); flex-shrink:0; }
-.reminderGo { color: var(--muted); }
-
-/* Bento grid */
-.bento { display:grid; grid-template-columns: repeat(4, minmax(0,1fr)); gap: var(--space-4); grid-auto-flow: dense; }
-@media (max-width: 900px) { .bento { grid-template-columns: repeat(2, minmax(0,1fr)); } }
-@media (max-width: 520px) { .bento { grid-template-columns: 1fr; } }
-.tileWide { grid-column: span 2; }
-@media (max-width: 520px) { .tileWide { grid-column: span 1; } }
-
-/* App card */
-.card { position: relative; display:flex; flex-direction:column; gap: var(--space-3); min-height: 132px; padding: var(--space-5); border: 1px solid var(--border); border-radius: var(--radius-lg); background: var(--surface); box-shadow: var(--card-shadow); text-decoration:none; color: var(--fg); overflow:hidden; transition: border-color var(--duration) var(--ease-premium), background var(--duration) var(--ease-premium), transform var(--duration) var(--ease-premium), box-shadow var(--duration) var(--ease-premium); }
-.card:hover { border-color: var(--brand-line); background: var(--brand-soft); transform: translateY(-2px); box-shadow: 0 0 40px -18px var(--brand-glow), var(--card-shadow); }
-.cardIcon { display:grid; place-items:center; width: 42px; height: 42px; border-radius: 13px; background: var(--brand-soft); border: 1px solid var(--brand-line); font-size: 20px; flex-shrink:0; }
-.cardName { font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); letter-spacing: -0.02em; }
-.cardTag { font-size: 12px; color: var(--muted); line-height: 1.4; }
-.cardArrow { position:absolute; top: var(--space-5); right: var(--space-5); color: var(--muted); font-size: 16px; transition: color var(--duration) var(--ease-premium), transform var(--duration) var(--ease-premium); }
-.card:hover .cardArrow { color: var(--brand); transform: translate(2px,-2px); }
-.cardTop { display:flex; align-items:center; gap: var(--space-3); }
-.cardStat { display:flex; flex-direction:column; gap: 2px; margin-top: auto; }
-.cardStatValue { font-family: var(--font-display); font-weight: 600; font-size: var(--text-xl); letter-spacing: -0.02em; color: var(--fg); font-variant-numeric: tabular-nums; }
-.cardStatLabel { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-
-/* Vitals tile */
-.vitals { grid-column: span 2; grid-row: span 2; display:flex; flex-direction:column; gap: var(--space-4); padding: var(--space-6); border: 1px solid var(--brand-line); border-radius: var(--radius-lg); background: var(--brand-soft); box-shadow: 0 0 50px -24px var(--brand-glow), var(--card-shadow); }
-@media (max-width: 520px) { .vitals { grid-column: span 1; grid-row: auto; } }
-.vitalsHead { display:flex; align-items:center; justify-content:space-between; gap: var(--space-3); flex-wrap:wrap; }
-.vitalsEyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase; color: var(--brand); }
-.srcBadge { display:inline-flex; align-items:center; gap: 6px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 10px; border-radius: var(--radius-pill); background: var(--surface); border: 1px solid var(--border); color: var(--muted-strong); }
-.srcDot { width: 6px; height: 6px; border-radius: 50%; background: var(--brand); box-shadow: 0 0 8px var(--brand-glow); }
-.vitalsBody { display:flex; align-items:center; gap: var(--space-6); flex-wrap: wrap; }
-.recRing { position: relative; width: 132px; height: 132px; display:grid; place-items:center; flex-shrink:0; }
-.recRing svg { position:absolute; inset:0; transform: rotate(-90deg); }
-.recTrack { fill:none; stroke: var(--track); stroke-width: 9; }
-.recFill { fill:none; stroke: currentColor; stroke-width: 9; stroke-linecap: round; transition: stroke-dashoffset 700ms var(--ease-premium); filter: drop-shadow(0 0 10px currentColor); }
-.recRing[data-tone="good"] .recFill { color: var(--pos); }
-.recRing[data-tone="watch"] .recFill { color: var(--warn); }
-.recRing[data-tone="low"] .recFill { color: var(--neg); }
-.recRing[data-tone="muted"] .recFill { color: var(--muted); }
-.recNum { font-family: var(--font-display); font-weight: 600; font-size: 2.5rem; line-height: 1; letter-spacing: -0.03em; font-variant-numeric: tabular-nums; }
-.recUnit { font-size: var(--text-base); color: var(--muted-strong); }
-.recCap { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--muted); margin-top: 2px; }
-.vMetrics { display:flex; flex-direction:column; gap: var(--space-3); flex:1; min-width: 150px; }
-.vRow { display:flex; align-items:baseline; justify-content:space-between; gap: var(--space-3); padding-bottom: var(--space-2); border-bottom: 1px solid var(--border); }
-.vRow:last-child { border-bottom:0; }
-.vLabel { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.vVal { font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); font-variant-numeric: tabular-nums; }
-.vVal em { font-family: var(--font-mono); font-style: normal; font-size: 11px; color: var(--muted); margin-left: 4px; }
-.vitalsFoot { display:flex; align-items:center; justify-content:space-between; gap: var(--space-3); flex-wrap: wrap; }
-.vitalsSync { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-.vitalsEmpty { display:flex; flex-direction:column; gap: var(--space-3); justify-content:center; flex:1; }
-.vitalsEmptyTitle { font-family: var(--font-display); font-weight: 600; font-size: var(--text-xl); letter-spacing: -0.02em; }
-.vitalsEmptyBody { font-size: 13px; color: var(--muted-strong); line-height: 1.55; max-width: 42ch; }
-
-/* Buttons */
-.btn { display:inline-flex; align-items:center; justify-content:center; gap: var(--space-2); padding: 0.6rem var(--space-4); border-radius: var(--radius-md); font-size: var(--text-sm); font-family: var(--font-ui); font-weight: 600; cursor: pointer; border: 1px solid transparent; background: transparent; color: var(--fg); white-space: nowrap; transition: background var(--duration) var(--ease), border-color var(--duration) var(--ease), color var(--duration) var(--ease), filter var(--duration) var(--ease), box-shadow var(--duration) var(--ease); }
-.btn:disabled { opacity: 0.45; cursor: not-allowed; }
-.btn-primary { background: var(--brand); color: var(--brand-ink); font-weight: 700; }
-.btn-primary:hover:not(:disabled) { filter: brightness(1.08); box-shadow: 0 0 26px var(--brand-glow); }
-.btn-ghost { color: var(--fg); border: 1px solid var(--border); }
-.btn-ghost:hover { border-color: var(--border-strong); background: var(--surface); }
-.btn-link { color: var(--muted-strong); padding: var(--space-2) var(--space-2); }
-.btn-link:hover { color: var(--neg); }
-
-/* Modal */
-.overlay { position: fixed; inset:0; background: var(--overlay); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); z-index: 1000; display:grid; place-items:center; padding: var(--space-4); animation: fade 200ms var(--ease-premium); }
-@keyframes fade { from { opacity:0; } to { opacity:1; } }
-.panel { width: min(480px, 100%); background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: var(--space-6); box-shadow: 0 28px 70px -16px rgba(0,0,0,0.6); animation: rise 320ms var(--ease-premium); }
-@keyframes rise { from { opacity:0; transform: translateY(12px) scale(0.98); } to { opacity:1; transform:none; } }
-.panelHead { display:flex; align-items:flex-start; justify-content:space-between; gap: var(--space-3); margin-bottom: var(--space-5); }
-.panelEyebrow { font-family: var(--font-mono); font-size: 10px; font-weight: 600; letter-spacing: 0.24em; text-transform: uppercase; color: var(--brand); }
-.panelTitle { font-family: var(--font-display); font-weight: 600; font-size: var(--text-2xl); letter-spacing: -0.03em; margin: var(--space-2) 0 0; }
-.panelClose { background: transparent; border: 1px solid var(--border); color: var(--muted-strong); font-size: 20px; line-height: 1; width: 34px; height: 34px; border-radius: 50%; cursor: pointer; flex-shrink:0; }
-.panelClose:hover { color: var(--fg); border-color: var(--border-strong); }
-.srcPills { display:flex; gap: var(--space-2); margin-bottom: var(--space-5); flex-wrap: wrap; }
-.srcPill { appearance:none; flex:1; min-width: 96px; padding: 10px 12px; border-radius: var(--radius-md); border: 1px solid var(--border); background: var(--surface); color: var(--muted-strong); font-family: var(--font-ui); font-size: 13px; font-weight: 600; cursor: pointer; display:flex; flex-direction:column; align-items:center; gap: 4px; transition: all var(--duration) var(--ease-premium); }
-.srcPill .srcEmoji { font-size: 18px; }
-.srcPillActive, .srcPillActive:hover { border-color: var(--brand); background: var(--brand-soft); color: var(--fg); box-shadow: 0 0 0 3px var(--brand-soft); }
-.fieldGrid { display:grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
-.field { display:flex; flex-direction:column; gap: 6px; }
-.fieldFull { grid-column: 1 / -1; }
-.fieldLabel { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
-.fieldInput { width:100%; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 10px 12px; color: var(--fg); font-family: var(--font-mono); font-size: 14px; outline: none; transition: border-color var(--duration) var(--ease-premium), box-shadow var(--duration) var(--ease-premium); }
-.fieldInput:focus { border-color: var(--brand-line); box-shadow: 0 0 0 3px var(--brand-soft); }
-.panelNote { margin: var(--space-4) 0 0; padding: var(--space-3) var(--space-4); border-left: 2px solid var(--brand-line); background: var(--brand-soft); border-radius: 0 var(--radius-sm) var(--radius-sm) 0; font-size: 12px; line-height: 1.55; color: var(--muted-strong); }
-.panelNote a { color: var(--brand); text-decoration:none; }
-.panelNote a:hover { text-decoration: underline; }
-.panelActions { display:flex; align-items:center; justify-content:flex-end; gap: var(--space-2); margin-top: var(--space-6); }
-.panelActions .spacer { margin-right:auto; }
-.srcActions { display:flex; align-items:center; gap: var(--space-2); margin-top: var(--space-4); }
-.srcActions .spacer { margin-right:auto; }
-
-/* ============================================================
- * Live vitals ticker — a scrolling marquee of every metric the
- * suite currently knows (vitals + finance/water/supplements).
- * Lead label is pinned; the track scrolls right→left, duplicated
- * once for a seamless loop. Pauses on hover; honours reduced-motion.
- * ============================================================ */
-.ticker { position: relative; display:flex; align-items:stretch; gap: 0; margin: calc(var(--space-2) * -1) 0 var(--space-8); border: 1px solid var(--border); border-radius: var(--radius-pill); background: linear-gradient(180deg, var(--surface-2), var(--surface)); box-shadow: var(--card-shadow); overflow: hidden; }
-.ticker:hover .tickerTrack { animation-play-state: paused; }
-.tickerLead { display:flex; align-items:center; gap: 9px; flex-shrink:0; padding: 0 var(--space-4) 0 var(--space-5); font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--muted-strong); border-right: 1px solid var(--border); position: relative; z-index:2; background: linear-gradient(180deg, var(--surface-2), var(--surface)); }
-.tickerPulse { width: 7px; height: 7px; border-radius: 50%; background: var(--pos); box-shadow: 0 0 0 0 var(--pos); animation: tickerPulse 2.4s var(--ease) infinite; flex-shrink:0; }
-@keyframes tickerPulse { 0% { box-shadow: 0 0 0 0 var(--pos-line); } 70% { box-shadow: 0 0 0 7px transparent; } 100% { box-shadow: 0 0 0 0 transparent; } }
-.tickerViewport { position: relative; flex:1; min-width: 0; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 92%, transparent); mask-image: linear-gradient(90deg, transparent, #000 4%, #000 92%, transparent); }
-.tickerTrack { display:flex; align-items:center; width: max-content; padding: 13px 0; animation: tickerScroll linear infinite; will-change: transform; }
-@keyframes tickerScroll { from { transform: translateX(0); } to { transform: translateX(-50%); } }
-.tickerItem { display:inline-flex; align-items:center; gap: 11px; padding: 0 var(--space-5); border-right: 1px solid var(--border); white-space: nowrap; color: var(--brand); }
-.tiLabel { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: 0.16em; color: var(--muted); }
-.tiVal { font-family: var(--font-display); font-weight: 600; font-size: var(--text-lg); letter-spacing: -0.01em; color: var(--fg); font-variant-numeric: tabular-nums; }
-.tiUnit { font-family: var(--font-mono); font-size: 11px; font-weight: 500; color: var(--muted); margin-left: 3px; }
-.tiDelta { font-family: var(--font-mono); font-size: 11px; font-weight: 600; color: currentColor; }
-.tiSpark { display:block; flex-shrink:0; }
-.tickerItem[data-tone="good"] { color: var(--pos); }
-.tickerItem[data-tone="watch"] { color: var(--warn); }
-.tickerItem[data-tone="low"] { color: var(--neg); }
-.tickerItem[data-tone="muted"] { color: var(--muted); }
-@media (prefers-reduced-motion: reduce) { .tickerTrack { animation: none; } .tickerViewport { overflow-x: auto; } }
-
-/* How-to steps (Apple Watch manual-copy guide inside the vitals modal) */
-.howto { margin: var(--space-4) 0 var(--space-2); padding: var(--space-4); border: 1px solid var(--brand-line); background: var(--brand-soft); border-radius: var(--radius-md); }
-.howtoTitle { display:flex; align-items:center; gap: 8px; font-family: var(--font-display); font-weight: 600; font-size: var(--text-sm); margin-bottom: var(--space-3); }
-.howtoSteps { list-style: none; margin: 0; padding: 0; display:flex; flex-direction:column; gap: var(--space-3); counter-reset: step; }
-.howtoSteps li { position: relative; padding-left: 34px; font-size: 13px; line-height: 1.5; color: var(--muted-strong); counter-increment: step; }
-.howtoSteps li::before { content: counter(step); position: absolute; left: 0; top: -1px; display:grid; place-items:center; width: 22px; height: 22px; border-radius: 50%; background: var(--brand); color: var(--brand-ink); font-family: var(--font-display); font-weight: 700; font-size: 12px; }
-.howtoSteps strong { color: var(--fg); font-weight: 600; }
-.howtoChips { display:flex; flex-wrap:wrap; gap: 6px; margin-top: 6px; }
-.howtoChip { display:inline-block; padding: 3px 9px; border-radius: var(--radius-pill); background: var(--surface-2); border: 1px solid var(--border); font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.04em; color: var(--fg); }
-.howtoFoot { margin: var(--space-3) 0 0; font-size: 11px; line-height: 1.5; color: var(--muted); }
+.command-hero::before {
+  content: "";
+  position: absolute;
+  inset: 18% 0 0;
+  pointer-events: none;
+  opacity: 0.36;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px);
+  background-size: 42px 42px;
+  mask-image: linear-gradient(180deg, transparent, #000 28%, transparent 100%);
+}
+.command-hero::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -180px;
+  width: min(760px, 92vw);
+  height: 360px;
+  transform: translateX(-50%);
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse at center, rgba(var(--os-accent-rgb), 0.24), transparent 58%),
+    radial-gradient(ellipse at center, rgba(var(--os-success-rgb), 0.08), transparent 70%);
+  filter: blur(4px);
+}
+.command-hero-top,
+.command-hero-bottom,
+.snapshot-head,
+.dock-head,
+.mini-row,
+.reminders {
+  display: flex;
+  align-items: center;
+  gap: var(--os-space-3);
+}
+.command-hero-top,
+.command-hero-bottom,
+.snapshot-head,
+.dock-head {
+  justify-content: space-between;
+}
+.command-hero-bottom {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.hero-copy {
+  max-width: 760px;
+  margin: 0 auto;
+  text-align: center;
+  position: relative;
+  z-index: 2;
+}
+.hero-title {
+  margin: 0;
+  font-family: var(--os-font-display);
+  font-size: clamp(3.4rem, 13vw, 7.5rem);
+  line-height: 0.95;
+  letter-spacing: var(--os-tracking-tight);
+}
+.hero-subtitle {
+  margin: var(--os-space-3) 0 0;
+  max-width: 58ch;
+  color: var(--os-text-3);
+  line-height: var(--os-leading-body);
+  margin-left: auto;
+  margin-right: auto;
+}
+.command-search {
+  position: relative;
+  z-index: 2;
+  min-height: var(--os-touch);
+  min-width: min(100%, 420px);
+  margin: 0 auto;
+  justify-content: flex-start;
+  color: var(--os-text-2);
+  border-color: var(--os-border-2);
+  background: rgba(28, 29, 36, 0.76);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 26px 70px -44px rgba(0,0,0,0.95);
+}
+.command-search kbd {
+  margin-left: auto;
+  color: var(--os-text-3);
+  font-family: var(--os-font-mono);
+  font-size: var(--os-text-2xs);
+  border: 1px solid var(--os-border-1);
+  border-radius: var(--os-radius-xs);
+  padding: 2px 6px;
+}
+.hero-status {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--os-space-2);
+}
+.hero-status .os-chip {
+  min-height: 34px;
+}
+.profileChip {
+  min-height: 36px;
+}
+.profileAvatar {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--os-radius-pill);
+  background: var(--os-gradient-brand);
+  color: var(--os-text-invert);
+  font-family: var(--os-font-display);
+  font-size: var(--os-text-xs);
+  font-weight: 700;
+}
+.profileChipNew {
+  color: var(--os-accent);
+  border-color: var(--os-accent-line);
+  background: var(--os-accent-soft);
+}
+.themeSeg {
+  margin-left: auto;
+}
+.overview-grid,
+.snapshot-grid,
+.launcher-grid,
+.stat-grid {
+  display: grid;
+  gap: var(--os-space-4);
+}
+.overview-grid {
+  grid-template-columns: 1.2fr 0.8fr;
+}
+.snapshot-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.launcher-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.stat-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.today-card,
+.snapshot-card,
+.launcher-card,
+.live-strip {
+  min-width: 0;
+}
+.today-card {
+  display: grid;
+  align-content: space-between;
+  min-height: 390px;
+  padding: clamp(18px, 3vw, 30px);
+}
+.vitals-stage {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: var(--os-space-6);
+  margin: var(--os-space-6) 0;
+}
+.recRing {
+  --ring-tone: var(--os-accent);
+  position: relative;
+  width: clamp(132px, 34vw, 176px);
+  height: clamp(132px, 34vw, 176px);
+  display: grid;
+  place-items: center;
+}
+.recRing svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+.recTrack {
+  fill: none;
+  stroke: var(--track);
+  stroke-width: 9;
+}
+.recFill {
+  fill: none;
+  stroke: var(--ring-tone);
+  stroke-width: 9;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 10px var(--ring-tone));
+}
+.recRing[data-tone="good"] { --ring-tone: var(--os-success); }
+.recRing[data-tone="watch"] { --ring-tone: var(--os-warning); }
+.recRing[data-tone="low"] { --ring-tone: var(--os-danger); }
+.recRing[data-tone="muted"] { --ring-tone: var(--os-text-4); }
+.recNum {
+  font-family: var(--os-font-display);
+  font-size: clamp(2.25rem, 9vw, 4rem);
+  line-height: 1;
+  letter-spacing: var(--os-tracking-tight);
+  font-variant-numeric: tabular-nums;
+}
+.recUnit,
+.recCap,
+.vLabel,
+.ticker-label,
+.snapshot-kicker,
+.remindersLabel {
+  font-family: var(--os-font-mono);
+  font-size: var(--os-text-2xs);
+  letter-spacing: var(--os-tracking-caps);
+  text-transform: uppercase;
+  color: var(--os-text-3);
+}
+.recUnit {
+  font-size: var(--os-text-sm);
+  letter-spacing: 0;
+}
+.vMetrics {
+  display: grid;
+  gap: var(--os-space-3);
+}
+.vRow {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--os-space-3);
+  padding-bottom: var(--os-space-2);
+  border-bottom: 1px solid var(--os-border-1);
+}
+.vRow:last-child {
+  border-bottom: 0;
+}
+.vVal {
+  color: var(--os-text-1);
+  font-family: var(--os-font-display);
+  font-size: var(--os-text-lg);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.vVal em {
+  margin-left: 4px;
+  color: var(--os-text-3);
+  font-family: var(--os-font-mono);
+  font-size: var(--os-text-xs);
+  font-style: normal;
+}
+.today-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--os-space-3);
+  flex-wrap: wrap;
+}
+.vitalsEmptyBody,
+.snapshot-body,
+.cardTag,
+.empty-note {
+  color: var(--os-text-3);
+  line-height: 1.5;
+}
+.mini-stack,
+.snapshot-card,
+.launcher-card,
+.live-strip {
+  display: grid;
+  gap: var(--os-space-3);
+}
+.mini-stack .stat-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.mini-stat {
+  padding: var(--os-space-4);
+  min-height: 118px;
+}
+.mini-label,
+.cardStatLabel {
+  font-family: var(--os-font-mono);
+  font-size: var(--os-text-2xs);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--os-text-3);
+}
+.mini-value,
+.cardStatValue,
+.snapshot-value {
+  font-family: var(--os-font-display);
+  font-size: var(--os-text-xl);
+  font-weight: 600;
+  letter-spacing: var(--os-tracking-ui);
+  color: var(--os-text-1);
+  font-variant-numeric: tabular-nums;
+}
+.live-strip {
+  overflow: hidden;
+  padding: 0;
+}
+.ticker {
+  display: grid;
+  gap: var(--os-space-3);
+}
+.ticker-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--os-space-3);
+  padding: var(--os-space-4) var(--os-space-4) 0;
+}
+.ticker-viewport {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 6%, #000 94%, transparent);
+}
+.ticker-track {
+  display: flex;
+  width: max-content;
+  animation: tickerScroll linear infinite;
+}
+.ticker-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--os-space-3);
+  min-height: 54px;
+  padding: 0 var(--os-space-4);
+  border-right: 1px solid var(--os-border-1);
+  color: var(--os-accent);
+  white-space: nowrap;
+}
+.ticker-value {
+  color: var(--os-text-1);
+  font-family: var(--os-font-display);
+  font-size: var(--os-text-lg);
+  font-weight: 600;
+}
+.ticker-unit {
+  margin-left: 3px;
+  color: var(--os-text-3);
+  font-family: var(--os-font-mono);
+  font-size: var(--os-text-xs);
+}
+.ticker-item[data-tone="good"] { color: var(--os-success); }
+.ticker-item[data-tone="watch"] { color: var(--os-warning); }
+.ticker-item[data-tone="low"] { color: var(--os-danger); }
+.ticker-item[data-tone="muted"] { color: var(--os-text-3); }
+@keyframes tickerScroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+.reminders {
+  flex-wrap: wrap;
+}
+.reminderChip {
+  text-decoration: none;
+}
+.snapshot-card {
+  min-height: 230px;
+}
+.snapshot-card.is-wide {
+  grid-column: span 2;
+}
+.snapshot-icon,
+.cardIcon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--os-radius-md);
+  color: var(--os-accent-2);
+  background: var(--os-accent-soft);
+  border: 1px solid var(--os-accent-line);
+}
+.snapshot-icon svg,
+.cardIcon svg,
+.command-search svg,
+.os-mobile-bottom-nav svg {
+  width: 18px;
+  height: 18px;
+  stroke-width: 1.8;
+}
+.snapshot-meter {
+  height: 7px;
+  overflow: hidden;
+  border-radius: var(--os-radius-pill);
+  background: rgba(255,255,255,0.065);
+}
+.snapshot-meter span {
+  display: block;
+  width: var(--meter, 0%);
+  height: 100%;
+  border-radius: inherit;
+  background: var(--os-gradient-brand);
+}
+.launcher-card {
+  min-height: 168px;
+  color: var(--os-text-1);
+  text-decoration: none;
+}
+.launcher-card.is-wide {
+  grid-column: span 2;
+}
+.cardTop,
+.cardHead {
+  display: flex;
+  align-items: center;
+  gap: var(--os-space-3);
+}
+.cardArrow {
+  margin-left: auto;
+  color: var(--os-text-3);
+}
+.cardName {
+  font-family: var(--os-font-display);
+  font-size: var(--os-text-lg);
+  font-weight: 600;
+}
+.empty-note {
+  padding: var(--os-space-4);
+  border: 1px dashed var(--os-border-2);
+  border-radius: var(--os-radius-md);
+  background: rgba(255,255,255,0.025);
+}
+.home-section {
+  display: grid;
+  gap: var(--os-space-4);
+}
+.floating-dock-row {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  margin-top: var(--os-space-2);
+}
+.home-dock {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  max-width: 100%;
+  padding: 8px;
+  border-radius: var(--os-radius-pill);
+  border: 1px solid rgba(255,255,255,0.12);
+  background: rgba(31,32,40,0.76);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 1px 0 rgba(255,255,255,0.08) inset, 0 26px 70px -44px rgba(0,0,0,0.98);
+  overflow-x: auto;
+}
+.home-dock a {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 auto;
+  color: var(--os-text-2);
+  border-radius: var(--os-radius-pill);
+  text-decoration: none;
+  transition: color var(--os-duration-2) var(--os-ease-out), background var(--os-duration-2) var(--os-ease-out);
+}
+.home-dock a:hover,
+.home-dock a:focus-visible {
+  color: var(--os-text-1);
+  background: rgba(255,255,255,0.095);
+}
+.home-dock svg {
+  width: 19px;
+  height: 19px;
+}
+.hero-panel {
+  position: relative;
+  z-index: 2;
+  width: min(760px, 100%);
+  margin: 0 auto;
+  border: 1px solid rgba(255,255,255,0.09);
+  border-radius: var(--os-radius-xl);
+  background: rgba(8,9,13,0.56);
+  overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset;
+}
+.hero-panel-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--os-space-3);
+  padding: var(--os-space-4);
+  border-bottom: 1px solid rgba(255,255,255,0.07);
+}
+.hero-chart {
+  position: relative;
+  height: 148px;
+  padding: var(--os-space-4);
+}
+.hero-chart svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+.hero-chart-grid {
+  position: absolute;
+  inset: 0;
+  opacity: 0.16;
+  background-image: linear-gradient(rgba(255,255,255,0.12) 1px, transparent 1px);
+  background-size: 100% 36px;
+}
+.hero-chart path {
+  filter: drop-shadow(0 0 10px rgba(var(--os-success-rgb),0.35));
+}
+.mobile-home-nav {
+  display: flex;
+}
+.srcPills {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--os-space-2);
+  margin-bottom: var(--os-space-5);
+}
+.srcPill {
+  min-height: 60px;
+  flex-direction: column;
+}
+.srcPill .srcEmoji {
+  display: grid;
+  place-items: center;
+  color: var(--os-accent);
+}
+.howto {
+  margin: var(--os-space-4) 0 var(--os-space-2);
+  padding: var(--os-space-4);
+  border: 1px solid var(--os-accent-line);
+  background: var(--os-accent-soft);
+  border-radius: var(--os-radius-md);
+}
+.howtoTitle {
+  font-family: var(--os-font-display);
+  font-weight: 600;
+  margin-bottom: var(--os-space-3);
+}
+.howtoSteps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: step;
+  display: grid;
+  gap: var(--os-space-3);
+}
+.howtoSteps li {
+  position: relative;
+  padding-left: 34px;
+  color: var(--os-text-2);
+  line-height: 1.5;
+  counter-increment: step;
+}
+.howtoSteps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: var(--os-radius-pill);
+  background: var(--os-accent);
+  color: var(--os-text-invert);
+  font-family: var(--os-font-display);
+  font-size: var(--os-text-xs);
+  font-weight: 700;
+}
+.howtoChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.howtoChip {
+  padding: 3px 9px;
+  border: 1px solid var(--os-border-1);
+  border-radius: var(--os-radius-pill);
+  background: var(--os-glass-2);
+  color: var(--os-text-1);
+  font-family: var(--os-font-mono);
+  font-size: var(--os-text-2xs);
+}
+.howtoFoot {
+  color: var(--os-text-3);
+  font-size: var(--os-text-xs);
+  line-height: 1.5;
+}
+@media (max-width: 980px) {
+  .overview-grid,
+  .snapshot-grid,
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .launcher-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (min-width: 901px) {
+  .mobile-home-nav {
+    display: none;
+  }
+}
+@media (max-width: 720px) {
+  .command-hero {
+    min-height: auto;
+    padding: var(--os-space-5);
+  }
+  .hero-title {
+    font-size: clamp(3rem, 16vw, 4.35rem);
+  }
+  .hero-panel {
+    display: none;
+  }
+  .command-hero-top,
+  .command-hero-bottom,
+  .snapshot-head,
+  .dock-head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .themeSeg {
+    margin-left: 0;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  .overview-grid,
+  .snapshot-grid,
+  .stat-grid,
+  .launcher-grid,
+  .vitals-stage,
+  .srcPills {
+    grid-template-columns: 1fr;
+  }
+  .snapshot-card.is-wide,
+  .launcher-card.is-wide {
+    grid-column: auto;
+  }
+  .command-search {
+    width: 100%;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .ticker-track {
+    animation: none;
+  }
+  .ticker-viewport {
+    overflow-x: auto;
+  }
+}
 </style>
+<link rel="stylesheet" href="fey.css" />
 </head>
 <body>
-<main class="page grain-overlay">
-  <div class="shell" id="app"></div>
+<main class="os-page dashboard-page os-grain">
+  <div class="os-shell dashboard-shell" id="app"></div>
 </main>
 <div id="modalRoot"></div>
 <script>
@@ -259,16 +710,39 @@ body { background: var(--bg); color: var(--fg); font-family: var(--font-ui), -ap
  * Apps in the suite — one bento card each.
  * ============================================================ */
 const APPS = [
-  { file: 'finance.html',     name: 'Finance',     tag: 'Net worth · subs · orders · wishlist', icon: '💰', wide: true },
-  { file: 'gym.html',         name: 'Gym',         tag: 'Progressive overload coach',           icon: '🏋️', wide: true },
-  { file: 'supplements.html', name: 'Supplements', tag: 'Your stack + smart recommendations',   icon: '💊' },
-  { file: 'whoop.html',       name: 'Fitness Band', tag: 'Whoop · Fitbit · Apple Watch sync',      icon: '🔋' },
-  { file: 'water.html',       name: 'Water',       tag: 'Daily hydration target',                icon: '💧' },
-  { file: 'creator.html',     name: 'Creator',     tag: 'Schedule · accounts · analytics',       icon: '🎬' },
-  { file: 'goals.html',       name: 'Goals',       tag: 'Goals & streaks',                       icon: '🎯' },
-  { file: 'progress.html',    name: 'Progress',    tag: 'Photos & measurements',                 icon: '📈' },
-  { file: 'macros.html',      name: 'Macros',      tag: 'Protein · carbs · fat',                 icon: '🍳' },
+  { file: 'finance.html',     name: 'Finance',      tag: 'Net worth · subs · orders · wishlist', icon: 'wallet', wide: true },
+  { file: 'gym.html',         name: 'Gym',          tag: 'Progressive overload coach',           icon: 'activity', wide: true },
+  { file: 'supplements.html', name: 'Supplements',  tag: 'Your stack + smart recommendations',   icon: 'capsule' },
+  { file: 'whoop.html',       name: 'Fitness Band', tag: 'Whoop · Fitbit · Apple Watch sync',    icon: 'watch' },
+  { file: 'water.html',       name: 'Water',        tag: 'Daily hydration target',               icon: 'drop' },
+  { file: 'creator.html',     name: 'Creator',      tag: 'Schedule · accounts · analytics',      icon: 'clapper' },
+  { file: 'goals.html',       name: 'Goals',        tag: 'Goals & streaks',                      icon: 'target' },
+  { file: 'progress.html',    name: 'Progress',     tag: 'Photos & measurements',                icon: 'trend' },
+  { file: 'macros.html',      name: 'Macros',       tag: 'Protein · carbs · fat',                icon: 'pie' },
 ];
+
+function iconSvg(name){
+  const icons = {
+    search: '<circle cx="11" cy="11" r="7"></circle><path d="m16.5 16.5 4 4"></path>',
+    wallet: '<path d="M19 7V6a2 2 0 0 0-2-2H5a3 3 0 0 0 0 6h14v9H5a3 3 0 0 1-3-3V7"></path><path d="M16 13h.01"></path>',
+    activity: '<path d="M4 13h3l2-7 4 12 2-5h5"></path>',
+    capsule: '<path d="m10 21 10-10a5 5 0 0 0-7-7L3 14a5 5 0 0 0 7 7Z"></path><path d="m8 9 7 7"></path>',
+    watch: '<path d="M7 6V3h10v3"></path><rect x="6" y="6" width="12" height="12" rx="3"></rect><path d="M7 18v3h10v-3"></path>',
+    drop: '<path d="M12 3s6 6.3 6 11a6 6 0 0 1-12 0c0-4.7 6-11 6-11Z"></path>',
+    clapper: '<path d="M4 11h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8Z"></path><path d="m4 11 2-7 14 4-1 3"></path><path d="m8 5 3 5"></path><path d="m14 6.7 3 5"></path>',
+    target: '<circle cx="12" cy="12" r="8"></circle><circle cx="12" cy="12" r="3"></circle><path d="M12 2v3M12 19v3M2 12h3M19 12h3"></path>',
+    trend: '<path d="M3 17 9 11l4 4 7-8"></path><path d="M14 7h6v6"></path>',
+    pie: '<path d="M12 3v9h9"></path><path d="M19.1 15A8 8 0 1 1 9 4"></path>',
+    book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15Z"></path>',
+    moon: '<path d="M20 14.2A7.8 7.8 0 0 1 9.8 4 8 8 0 1 0 20 14.2Z"></path>',
+    check: '<path d="m5 12 4 4L19 6"></path>',
+    arrow: '<path d="M7 17 17 7"></path><path d="M7 7h10v10"></path>',
+    plus: '<path d="M12 5v14M5 12h14"></path>',
+    scale: '<path d="M12 3v18"></path><path d="M6 7h12"></path><path d="m6 7-3 6h6L6 7Z"></path><path d="m18 7-3 6h6l-3-6Z"></path>',
+    spark: '<path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z"></path>'
+  };
+  return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (icons[name] || icons.spark) + '</svg>';
+}
 
 /* ============================================================
  * Theme (shared across the whole suite via patron_theme)
@@ -378,22 +852,60 @@ const ui = { modalOpen: false, draftSource: 'manual', profileOpen: false, profil
  * ============================================================ */
 function headerHtml(){
   const name = firstName();
-  const greeting = name ? 'Welcome back, ' + esc(name) : 'Your dashboard · everything in one place';
+  const greeting = name ? 'Welcome back, ' + esc(name) : 'Set up your command centre';
   const chip = profile
-    ? '<button type="button" class="profileChip" data-action="open-profile" title="Edit your profile"><span class="profileAvatar">' + esc((name || '·').charAt(0).toUpperCase()) + '</span>' + esc(name || 'Profile') + '</button>'
-    : '<button type="button" class="profileChip profileChipNew" data-action="open-profile">Set up profile</button>';
-  return '<header class="header"><div><h1 class="title">Dashboard</h1><p class="subtitle">' + greeting + '</p></div>'
-    + '<div class="headerControls">' + themeSegHtml() + chip + '</div></header>';
+    ? '<button type="button" class="os-button os-button-ghost profileChip" data-action="open-profile" title="Edit your profile"><span class="profileAvatar">' + esc((name || 'D').charAt(0).toUpperCase()) + '</span>' + esc(name || 'Profile') + '</button>'
+    : '<button type="button" class="os-button os-button-ghost profileChip profileChipNew" data-action="open-profile">Set up profile</button>';
+  return '<section class="os-glass-card command-hero">'
+    + '<div class="command-hero-top"><div class="hero-status">'
+    + '<span class="os-chip os-chip-success"><span class="os-status-dot"></span> Dashboard live</span>'
+    + '<span class="os-chip">' + esc(new Date().toLocaleDateString('en-AU', { weekday: 'short', month: 'short', day: 'numeric' })) + '</span>'
+    + '</div><div class="headerControls">' + themeSegHtml() + chip + '</div></div>'
+    + '<div class="command-hero-bottom"><div class="hero-copy"><p class="os-kicker">' + greeting + '</p>'
+    + '<h1 class="hero-title">Dashboard</h1>'
+    + '<p class="hero-subtitle">A fast, personal operating system for training, recovery, habits, money, progress, and the daily routines that keep everything moving.</p></div>'
+    + '<div>' + heroPanelHtml() + '<div class="floating-dock-row">' + floatingDockHtml() + '</div></div>'
+    + '<button type="button" class="os-button command-search" data-action="command"><span>' + iconSvg('search') + '</span><span>Search or run a command</span><kbd>⌘K</kbd></button></div>'
+    + '</section>';
+}
+
+function floatingDockHtml(){
+  const items = [
+    { href: 'index.html', icon: 'spark', label: 'Dashboard' },
+    { href: 'finance.html', icon: 'wallet', label: 'Finance' },
+    { href: 'gym.html', icon: 'activity', label: 'Gym' },
+    { href: 'water.html', icon: 'drop', label: 'Water' },
+    { href: 'goals.html', icon: 'target', label: 'Goals' },
+    { href: 'progress.html', icon: 'trend', label: 'Progress' },
+    { href: 'macros.html', icon: 'pie', label: 'Macros' }
+  ];
+  return '<nav class="home-dock" aria-label="Quick launch">'
+    + items.map(i => '<a href="' + i.href + '" title="' + esc(i.label) + '" aria-label="' + esc(i.label) + '">' + iconSvg(i.icon) + '</a>').join('')
+    + '</nav>';
+}
+
+function heroPanelHtml(){
+  const fin = financeSnapshot();
+  const wat = waterSnapshot();
+  const rec = health && health.recovery != null ? Math.round(health.recovery) + '%' : '—';
+  const points = 'M6 112 C60 112 88 106 126 82 S204 56 250 64 S326 74 386 34 S478 28 558 16';
+  return '<div class="hero-panel">'
+    + '<div class="hero-panel-top"><div><div class="mini-label">command summary</div><div class="mini-value">' + esc(fin.value) + '</div></div>'
+    + '<div class="hero-status"><span class="os-chip">REC ' + esc(rec) + '</span><span class="os-chip">H2O ' + esc(wat.value) + '</span></div></div>'
+    + '<div class="hero-chart"><div class="hero-chart-grid"></div><svg viewBox="0 0 564 132" preserveAspectRatio="none" aria-hidden="true">'
+    + '<path d="' + points + ' L558 132 L6 132 Z" fill="rgba(var(--os-success-rgb),0.13)"></path>'
+    + '<path d="' + points + '" fill="none" stroke="var(--os-success)" stroke-width="2.2" stroke-linecap="round"></path>'
+    + '</svg></div></div>';
 }
 
 function vitalsTileHtml(){
   const h = health;
   if (!h) {
-    return '<section class="vitals">'
-      + '<div class="vitalsHead"><span class="vitalsEyebrow">Today’s vitals</span></div>'
-      + '<div class="vitalsEmpty"><div class="vitalsEmptyTitle">No vitals yet</div>'
+    return '<section class="os-glass-card today-card">'
+      + '<div class="snapshot-head"><div><p class="os-kicker">Today overview</p><h2 class="os-section-title">No vitals yet</h2></div><span class="os-chip">Manual ready</span></div>'
+      + '<div class="os-empty-state"><div class="os-empty-title">Recovery is waiting</div>'
       + '<p class="vitalsEmptyBody">Connect Whoop, link your Apple Watch, or enter recovery &amp; sleep by hand. Your numbers then power the rest of the suite — the supplement recommender reads recovery &amp; sleep automatically.</p>'
-      + '<div class="vitalsFoot"><button type="button" class="btn btn-primary" data-action="open-vitals">Add vitals</button></div></div></section>';
+      + '<div class="today-actions"><button type="button" class="os-button os-button-primary" data-action="open-vitals">' + iconSvg('plus') + ' Add vitals</button><span class="empty-note">This becomes your daily readiness panel.</span></div></div></section>';
   }
   const tone = recTone(h.recovery);
   const circ = 2 * Math.PI * 56;
@@ -408,12 +920,12 @@ function vitalsTileHtml(){
     + row('HRV', h.hrv != null ? Math.round(h.hrv) + '<em>ms</em>' : '—')
     + row('Resting HR', h.rhr != null ? Math.round(h.rhr) + '<em>bpm</em>' : '—')
     + '</div>';
-  return '<section class="vitals">'
-    + '<div class="vitalsHead"><span class="vitalsEyebrow">Today’s vitals</span>'
-    + '<span class="srcBadge"><span class="srcDot"></span>' + esc(sourceLabel(h.source)) + '</span></div>'
-    + '<div class="vitalsBody">' + ring + metrics + '</div>'
-    + '<div class="vitalsFoot"><span class="vitalsSync">' + (h.ts ? 'updated ' + ago(h.ts) : '') + '</span>'
-    + '<button type="button" class="btn btn-ghost" data-action="open-vitals">Update vitals</button></div></section>';
+  return '<section class="os-glass-card today-card">'
+    + '<div class="snapshot-head"><div><p class="os-kicker">Today overview</p><h2 class="os-section-title">Recovery and readiness</h2></div>'
+    + '<span class="os-chip os-chip-success"><span class="os-status-dot"></span>' + esc(sourceLabel(h.source)) + '</span></div>'
+    + '<div class="vitals-stage">' + ring + metrics + '</div>'
+    + '<div class="today-actions"><span class="mini-label">' + (h.ts ? 'Updated ' + ago(h.ts) : 'Ready') + '</span>'
+    + '<button type="button" class="os-button os-button-ghost" data-action="open-vitals">Update vitals</button></div></section>';
 }
 
 /* ---- Live stats read from each app's own localStorage (defensive; tagline if unavailable) ---- */
@@ -432,17 +944,90 @@ function statFor(file){
     else if (file === 'supplements.html') { const s = lsGet('supplements_standalone_v1'); if (s && Array.isArray(s.items) && s.items.length) { const tk = (s.taken && s.taken[activeDateKey()]) || {}; const n = s.items.filter(i => tk[i.id]).length; return { value: n + '/' + s.items.length, label: 'taken today' }; } }
     else if (file === 'water.html') { const s = lsGet('water_standalone_v1'); if (s && s.logs) { const n = s.logs[localDateKey()] || 0; return { value: String(n), label: (n === 1 ? 'drink' : 'drinks') + ' today' }; } }
     else if (file === 'whoop.html') { if (health && health.recovery != null) return { value: Math.round(health.recovery) + '%', label: 'recovery' }; }
+    else if (file === 'goals.html') { const s = goalSnapshot(); if (s.total) return { value: s.done + '/' + s.total, label: 'goals done' }; }
+    else if (file === 'gym.html') { return loggedGymToday() ? { value: 'Done', label: 'logged today' } : null; }
   } catch (e) {}
   return null;
+}
+
+function financeSnapshot(){
+  const s = lsGet('finance_standalone_v1');
+  if (!s || !Array.isArray(s.accounts) || !s.accounts.length) return { value: 'AUD 0', label: 'net worth', detail: 'Add bank, stock, and wishlist data.', meter: 0 };
+  const nw = s.accounts.reduce((a,x)=>a+(Number(x.amountCHF)||0),0);
+  const accounts = s.accounts.length;
+  return { value: fmtFinanceAmount(nw), label: 'net worth', detail: accounts + ' account' + (accounts === 1 ? '' : 's') + ' tracked', meter: Math.min(100, accounts * 22) };
+}
+function waterSnapshot(){
+  const s = lsGet('water_standalone_v1');
+  const target = s && Number(s.target) ? Number(s.target) : 5;
+  const n = s && s.logs ? Number(s.logs[localDateKey()] || 0) : 0;
+  return { value: n + '/' + target, label: 'water', detail: n >= target ? 'Target hit today.' : Math.max(0, target - n) + ' bottle' + (Math.max(0, target - n) === 1 ? '' : 's') + ' to go.', meter: Math.min(100, Math.round((n / target) * 100)) };
+}
+function supplementSnapshot(){
+  const s = lsGet('supplements_standalone_v1');
+  if (!s || !Array.isArray(s.items) || !s.items.length) return { value: '0/0', label: 'habits', detail: 'Build your stack to unlock habit status.', meter: 0 };
+  const tk = (s.taken && s.taken[activeDateKey()]) || {};
+  const n = s.items.filter(i => tk[i.id]).length;
+  return { value: n + '/' + s.items.length, label: 'supplements', detail: n >= s.items.length ? 'Stack complete.' : 'Daily stack still in progress.', meter: Math.round((n / s.items.length) * 100) };
+}
+function goalSnapshot(){
+  const keys = [];
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.indexOf('goals:') === 0 || k.indexOf('goal_') === 0)) keys.push(k);
+    }
+  } catch(e){}
+  const streak = lsGet('goal_streak_v1');
+  return { done: streak && streak.doneToday ? 1 : 0, total: keys.length ? Math.max(1, keys.length - 1) : 0, streak: streak && streak.count ? streak.count : 0 };
+}
+function gymSnapshot(){
+  const done = loggedGymToday();
+  const h = health;
+  const rec = h && h.recovery != null ? Math.round(h.recovery) + '%' : '—';
+  return { value: done ? 'Logged' : 'Open', label: 'gym', detail: done ? 'Workout logged today.' : 'Training session not logged yet.', recovery: rec, meter: done ? 100 : 28 };
+}
+function keyStatsHtml(){
+  const fin = financeSnapshot();
+  const wat = waterSnapshot();
+  const sup = supplementSnapshot();
+  const gym = gymSnapshot();
+  const stats = [
+    { label: fin.label, value: fin.value, tone: 'good' },
+    { label: 'recovery', value: health && health.recovery != null ? Math.round(health.recovery) + '%' : '—', tone: recTone(health && health.recovery) },
+    { label: wat.label, value: wat.value, tone: wat.meter >= 100 ? 'good' : 'brand' },
+    { label: sup.label, value: sup.value, tone: sup.meter >= 100 ? 'good' : 'brand' }
+  ];
+  return '<section class="stat-grid">' + stats.map(s => '<article class="os-stat-card mini-stat" data-tone="' + esc(s.tone) + '"><div class="mini-label">' + esc(s.label) + '</div><div class="mini-value">' + esc(s.value) + '</div></article>').join('') + '</section>';
+}
+function snapshotCard(title, kicker, icon, value, body, href, meter){
+  return '<a class="os-card snapshot-card" href="' + href + '"><div class="snapshot-head"><div class="snapshot-icon">' + iconSvg(icon) + '</div><span class="cardArrow">' + iconSvg('arrow') + '</span></div>'
+    + '<div><div class="snapshot-kicker">' + esc(kicker) + '</div><h3 class="cardName">' + esc(title) + '</h3></div>'
+    + '<div><div class="snapshot-value">' + value + '</div><p class="snapshot-body">' + body + '</p></div>'
+    + '<div class="snapshot-meter" aria-hidden="true"><span style="--meter:' + Math.max(0, Math.min(100, meter || 0)) + '%"></span></div></a>';
+}
+function snapshotsHtml(){
+  const fin = financeSnapshot();
+  const wat = waterSnapshot();
+  const sup = supplementSnapshot();
+  const gym = gymSnapshot();
+  const goals = goalSnapshot();
+  return '<section class="home-section"><div class="os-section-header"><div><p class="os-kicker">Snapshots</p><h2 class="os-section-title">Today by domain</h2></div><span class="os-section-meta">Local-first data</span></div>'
+    + '<div class="snapshot-grid">'
+    + snapshotCard('Gym & recovery', 'Training', 'activity', gym.value, 'Recovery ' + gym.recovery + '. ' + gym.detail, 'gym.html', gym.meter)
+    + snapshotCard('Water & habits', 'Routine', 'drop', wat.value, wat.detail + ' Supplements: ' + sup.value + '.', 'water.html', Math.max(wat.meter, sup.meter))
+    + snapshotCard('Finance & goals', 'Control', 'wallet', fin.value, fin.detail + (goals.total ? '. Goals: ' + goals.done + '/' + goals.total + '.' : '. Goals need a clean hook.'), 'finance.html', fin.meter)
+    + snapshotCard('Progress', 'Analytics', 'trend', loggedWeightToday() ? 'Logged' : 'Open', loggedWeightToday() ? 'Weight is logged for today.' : 'Progress photos and weight log are ready.', 'progress.html', loggedWeightToday() ? 100 : 32)
+    + '</div></section>';
 }
 function cardHtml(a){
   const st = statFor(a.file);
   const tail = st
     ? '<div class="cardStat"><span class="cardStatValue">' + esc(st.value) + '</span><span class="cardStatLabel">' + esc(st.label) + '</span></div>'
     : '<p class="cardTag">' + esc(a.tag) + '</p>';
-  return '<a class="card' + (a.wide ? ' tileWide' : '') + '" href="' + a.file + '">'
-    + '<span class="cardArrow" aria-hidden>↗</span>'
-    + '<div class="cardTop"><span class="cardIcon" aria-hidden>' + a.icon + '</span><span class="cardName">' + esc(a.name) + '</span></div>'
+  return '<a class="os-card launcher-card' + (a.wide ? ' is-wide' : '') + '" href="' + a.file + '">'
+    + '<div class="cardHead"><span class="cardIcon">' + iconSvg(a.icon) + '</span><span class="cardArrow">' + iconSvg('arrow') + '</span></div>'
+    + '<div class="cardTop"><span class="cardName">' + esc(a.name) + '</span></div>'
     + tail + '</a>';
 }
 
@@ -492,22 +1077,19 @@ function tickerMetrics(){
 function tickerHtml(){
   const items = tickerMetrics();
   if (!items.length){
-    return '<div class="ticker"><div class="tickerLead"><span class="tickerPulse"></span>Dashboard · Live</div>'
-      + '<div class="tickerViewport"><div class="tickerTrack" style="animation:none;padding-left:var(--space-5)">'
-      + '<span class="tickerItem" style="border:0"><span class="tiLabel">No data yet — add vitals to go live</span></span>'
-      + '</div></div></div>';
+    return '<section class="os-glass-card live-strip"><div class="ticker-head"><span class="os-chip"><span class="os-status-dot"></span> dashboard.live</span><span class="ticker-label">Waiting for data</span></div>'
+      + '<div class="empty-note">No live metrics yet. Add vitals, water, supplements, or finance data to bring the strip online.</div></section>';
   }
-  const chip = (m, i) => '<span class="tickerItem" data-tone="' + m.tone + '">'
-    + '<span class="tiLabel">' + esc(m.label) + '</span>'
-    + '<span class="tiVal">' + esc(m.value) + (m.unit ? '<span class="tiUnit">' + esc(m.unit) + '</span>' : '') + '</span>'
+  const chip = (m, i) => '<span class="ticker-item" data-tone="' + m.tone + '">'
+    + '<span class="ticker-label">' + esc(m.label) + '</span>'
+    + '<span class="ticker-value">' + esc(m.value) + (m.unit ? '<span class="ticker-unit">' + esc(m.unit) + '</span>' : '') + '</span>'
     + (m.delta ? '<span class="tiDelta">' + esc(m.delta) + '</span>' : '')
     + sparkSvg(i + 1) + '</span>';
   const seq = items.map(chip).join('');
   // duration scales with item count so speed stays constant regardless of how much data we have
   const dur = Math.max(18, items.length * 6);
-  return '<div class="ticker"><div class="tickerLead"><span class="tickerPulse"></span>Dashboard · Live</div>'
-    + '<div class="tickerViewport"><div class="tickerTrack" style="animation-duration:' + dur + 's">'
-    + seq + seq + '</div></div></div>';
+  return '<section class="os-glass-card live-strip"><div class="ticker-head"><span class="os-chip os-chip-success"><span class="os-status-dot"></span> dashboard.live</span><span class="ticker-label">' + items.length + ' signals</span></div>'
+    + '<div class="ticker-viewport"><div class="ticker-track" style="animation-duration:' + dur + 's">' + seq + seq + '</div></div></section>';
 }
 
 /* ---- Daily "did you log it?" reminders (weight + gym), read from each app's storage ---- */
@@ -515,16 +1097,32 @@ function loggedWeightToday(){ try { const s = lsGet('progress_standalone_v1'); r
 function loggedGymToday(){ try { const d = lsGet('po_coach_workout_done'); return !!(d && d[localDateKey()]); } catch(e){ return false; } }
 function remindersHtml(){
   const items = [];
-  if (!loggedWeightToday()) items.push({ file: 'progress.html', icon: '⚖️', text: 'Log today’s weight' });
-  if (!loggedGymToday()) items.push({ file: 'gym.html', icon: '🏋️', text: 'Log today’s gym' });
+  if (!loggedWeightToday()) items.push({ file: 'progress.html', icon: 'scale', text: 'Log today’s weight' });
+  if (!loggedGymToday()) items.push({ file: 'gym.html', icon: 'activity', text: 'Log today’s gym' });
   if (!items.length) return '';
   return '<div class="reminders" role="status"><span class="remindersLabel">Today</span>'
-    + items.map(r => '<a class="reminderChip" href="' + r.file + '"><span class="reminderDot"></span><span aria-hidden>' + r.icon + '</span> ' + r.text + ' <span class="reminderGo" aria-hidden>→</span></a>').join('')
+    + items.map(r => '<a class="os-chip os-chip-warning reminderChip" href="' + r.file + '"><span class="snapshot-icon" aria-hidden="true">' + iconSvg(r.icon) + '</span>' + r.text + '</a>').join('')
     + '</div>';
+}
+function mobileNavHtml(){
+  const items = [
+    { href: 'index.html', icon: 'spark', label: 'Home' },
+    { href: 'goals.html', icon: 'target', label: 'Goals' },
+    { href: 'gym.html', icon: 'activity', label: 'Gym' },
+    { href: 'finance.html', icon: 'wallet', label: 'Finance' }
+  ];
+  return '<nav class="os-mobile-bottom-nav mobile-home-nav" aria-label="Primary">'
+    + '<div class="os-mobile-bottom-nav-inner">' + items.map(i => '<a class="os-mobile-nav-item" href="' + i.href + '">' + iconSvg(i.icon) + '<span>' + esc(i.label) + '</span></a>').join('') + '</div></nav>';
 }
 function render(){
   document.getElementById('app').innerHTML =
-    headerHtml() + tickerHtml() + remindersHtml() + '<div class="bento">' + vitalsTileHtml() + APPS.map(cardHtml).join('') + '</div>';
+    headerHtml()
+    + tickerHtml()
+    + remindersHtml()
+    + '<section class="overview-grid">' + vitalsTileHtml() + '<div class="mini-stack">' + keyStatsHtml() + '</div></section>'
+    + snapshotsHtml()
+    + '<section class="home-section"><div class="dock-head"><div><p class="os-kicker">Launcher</p><h2 class="os-section-title">Open a workspace</h2></div><span class="os-section-meta">All links preserved</span></div><div class="launcher-grid">' + APPS.map(cardHtml).join('') + '</div></section>'
+    + mobileNavHtml();
   renderModal();
 }
 
@@ -556,14 +1154,14 @@ function renderModal(){
   const src = ui.draftSource;
   const h = (health && health.source === src) ? health : (src !== 'whoop' && health && health.source !== 'whoop') ? health : null;
   const v = (k) => (h && h[k] != null ? h[k] : '');
-  const pill = (key, emoji, label) => '<button type="button" class="srcPill ' + (src === key ? 'srcPillActive' : '') + '" data-action="src" data-src="' + key + '"><span class="srcEmoji">' + emoji + '</span>' + label + '</button>';
+  const pill = (key, icon, label) => '<button type="button" class="srcPill ' + (src === key ? 'srcPillActive' : '') + '" data-action="src" data-src="' + key + '"><span class="srcEmoji">' + iconSvg(icon) + '</span>' + label + '</button>';
 
   let bodyHtml;
   if (src === 'whoop') {
     if (!ON_SERVER) {
       bodyHtml = '<p class="panelNote">Live Whoop sync runs on the deployed app (Vercel) with your Whoop API keys. Opened locally, use <strong>Apple Watch</strong> or <strong>Manual</strong> above. Once deployed &amp; configured, a one-tap <em>Connect Whoop</em> appears here. See <strong>WHOOP_SETUP.md</strong>.</p>';
     } else if (whoopStatus.connected) {
-      bodyHtml = '<p class="panelNote">✓ <strong>Whoop connected.</strong> Recovery, sleep &amp; strain sync automatically and publish across the suite. Tokens are stored server-side, never in the browser.</p>'
+      bodyHtml = '<p class="panelNote"><strong>Whoop connected.</strong> Recovery, sleep &amp; strain sync automatically and publish across the suite. Tokens are stored server-side, never in the browser.</p>'
         + '<div class="srcActions"><button type="button" class="btn btn-link spacer" data-action="whoop-disconnect">disconnect Whoop</button><button type="button" class="btn btn-primary" data-action="whoop-sync">Sync now</button></div>';
     } else {
       bodyHtml = '<p class="panelNote">Connect your Whoop account once — recovery, sleep &amp; strain then sync automatically and feed your supplement picks. You log in on whoop.com; your tokens stay server-side.</p>'
@@ -573,7 +1171,7 @@ function renderModal(){
     if (!ON_SERVER) {
       bodyHtml = '<p class="panelNote">Live Fitbit sync runs on the deployed app (Vercel) with your Fitbit API keys. Opened locally, use <strong>Apple Watch</strong> or <strong>Manual</strong> above. Once deployed &amp; configured, a one-tap <em>Connect Fitbit</em> appears here. See <strong>FITBIT_SETUP.md</strong>.</p>';
     } else if (fitbitStatus.connected) {
-      bodyHtml = '<p class="panelNote">✓ <strong>Fitbit connected.</strong> Sleep, HRV, resting HR &amp; your bed/wake times sync automatically across the suite. Tokens are stored server-side, never in the browser.<br><br>Heads-up: Fitbit doesn’t expose a recovery score, so the recovery ring stays blank — everything else fills in.</p>'
+      bodyHtml = '<p class="panelNote"><strong>Fitbit connected.</strong> Sleep, HRV, resting HR &amp; your bed/wake times sync automatically across the suite. Tokens are stored server-side, never in the browser.<br><br>Heads-up: Fitbit doesn’t expose a recovery score, so the recovery ring stays blank — everything else fills in.</p>'
         + '<div class="srcActions"><button type="button" class="btn btn-link spacer" data-action="fitbit-disconnect">disconnect Fitbit</button><button type="button" class="btn btn-primary" data-action="fitbit-sync">Sync now</button></div>';
     } else {
       bodyHtml = '<p class="panelNote">Connect your Fitbit account once — sleep, HRV, resting HR &amp; bed/wake times then sync automatically. You log in on fitbit.com; your tokens stay server-side. (Fitbit has no recovery score, so that ring stays blank.)</p>'
@@ -590,7 +1188,7 @@ function renderModal(){
       + '<div class="field fieldFull"><label class="fieldLabel" for="f-target">Sleep target (hours)</label><input id="f-target" class="fieldInput" type="number" min="4" max="12" step="0.5" inputmode="decimal" placeholder="8" value="' + esc(h && h.sleepTargetHours != null ? h.sleepTargetHours : 8) + '" /></div>'
       + '</div>'
       + '<p class="howtoFoot" style="margin-top:var(--space-3)">Fill <strong>Bedtime</strong> + <strong>Wake time</strong> and we’ll work out hours asleep for you — or just type the hours directly.</p>';
-    if (src === 'apple') bodyHtml = '<div class="howto"><div class="howtoTitle">⌚ Got an Apple Watch? Here’s the 20-second way</div>'
+    if (src === 'apple') bodyHtml = '<div class="howto"><div class="howtoTitle">Apple Watch copy flow</div>'
       + '<ol class="howtoSteps">'
       + '<li>Open the <strong>Health</strong> app on your iPhone.</li>'
       + '<li>Tap <strong>Sleep</strong> and note today’s <strong>bedtime</strong> &amp; <strong>wake time</strong>, then these three numbers:<div class="howtoChips"><span class="howtoChip">Heart Rate Variability</span><span class="howtoChip">Resting Heart Rate</span><span class="howtoChip">Time Asleep</span></div></li>'
@@ -603,7 +1201,7 @@ function renderModal(){
   const canClear = !!health;
   root.innerHTML = '<div class="overlay" data-action="close-vitals"><div class="panel" data-stop="1">'
     + '<div class="panelHead"><div><div class="panelEyebrow">Health source</div><h2 class="panelTitle">Today’s vitals</h2></div><button type="button" class="panelClose" data-action="close-vitals">×</button></div>'
-    + '<div class="srcPills">' + pill('whoop','🔋','Whoop') + pill('fitbit','💠','Fitbit') + pill('apple','⌚','Apple Watch') + pill('manual','✍️','Manual') + '</div>'
+    + '<div class="srcPills">' + pill('whoop','watch','Whoop') + pill('fitbit','activity','Fitbit') + pill('apple','watch','Apple Watch') + pill('manual','plus','Manual') + '</div>'
     + bodyHtml
     + '<div class="panelActions">' + (canClear ? '<button type="button" class="btn btn-link spacer" data-action="clear-vitals">clear vitals</button>' : '')
     + '<button type="button" class="btn btn-ghost" data-action="close-vitals">Cancel</button>'
@@ -717,6 +1315,7 @@ document.addEventListener('click', e => {
   if (!btn) return;
   const action = btn.getAttribute('data-action');
   if (action === 'theme') { applyTheme(btn.getAttribute('data-theme')); return; }
+  if (action === 'command') { alert('Command palette is reserved for the next phase. For now, use the launcher below.'); return; }
   if (action === 'open-vitals') { openVitals(); return; }
   if (action === 'open-profile') { openProfile(); return; }
   if (action === 'close-profile') { if (!stop || btn.tagName === 'BUTTON') { ui.profileOpen = false; renderModal(); } return; }
@@ -774,7 +1373,7 @@ window.addEventListener('storage', e => {
   if (e.key === HEALTH_KEY || e.key === LEGACY_WHOOP_KEY || e.key === null) { health = loadHealth(); render(); }
 });
 
-if (!profile) { ui.profileDraft = draftFromProfile(); ui.profileOpen = true; } // first run → onboarding prompt (init draft so typing is captured)
+if (!profile) { ui.profileDraft = draftFromProfile(); } // first run stays non-blocking; the setup chip opens onboarding.
 applyTheme(currentTheme);
 loadFinanceRates();
 
