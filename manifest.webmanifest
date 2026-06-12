@@ -1,6 +1,6 @@
 {
-  "name": "Patron — Rowan",
-  "short_name": "Patron",
+  "name": "Dashboard",
+  "short_name": "Dashboard",
   "description": "Your personal health, training, finance & creator dashboard.",
   "start_url": "index.html",
   "scope": "./",

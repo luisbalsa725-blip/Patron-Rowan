@@ -22,7 +22,7 @@ img{max-width:100%;height:auto}
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script>try{document.documentElement.setAttribute("data-theme",localStorage.getItem("patron_theme")||"nocturne");}catch(e){document.documentElement.setAttribute("data-theme","nocturne");}</script>
-<title>Dashboard · Rowan</title>
+<title>Dashboard</title>
 <style>
 :root {
   color-scheme: dark;
@@ -747,7 +747,7 @@ body::after {
 <body>
 <div class="page">
 
-  <a class="back" href="index.html"><span class="backArrow">←</span> Rowan</a>
+  <a class="back" href="index.html"><span class="backArrow">←</span> Dashboard</a>
   <div class="dash-head"><h1 class="dash-title" id="dashTitle">Dashboard</h1><div class="themeSeg" role="radiogroup" aria-label="Theme"><button type="button" class="themeBtn" data-theme="nocturne"><span class="themeSwatch" style="background:#8B7CFF"></span><span class="themeBtnLabel">Nocturne</span></button><button type="button" class="themeBtn" data-theme="aurora"><span class="themeSwatch" style="background:linear-gradient(135deg,#8B7BFF,#4FE3D0)"></span><span class="themeBtnLabel">Aurora</span></button><button type="button" class="themeBtn" data-theme="daylight"><span class="themeSwatch" style="background:#6A45FF"></span><span class="themeBtnLabel">Daylight</span></button></div></div>
 
   <div class="ticker-row">
@@ -867,8 +867,9 @@ body::after {
 (function () {
   'use strict';
 
-  // Paste your Anthropic key here to enable ✨ Polish. Empty = falls back to plain add.
-  const ANTHROPIC_API_KEY = '';
+  // Paste your OpenAI API key here to enable ✨ Polish. Empty = falls back to plain add.
+  const OPENAI_API_KEY = '';
+  const OPENAI_MODEL = 'gpt-4o-mini';
 
   // Day window is dynamic: pulled from the suite-wide vitals record (Whoop / Apple
   // Watch / manual entry), or overridden manually via the ⚙ popover. Defaults 8 / 24.
@@ -1470,18 +1471,20 @@ body::after {
   }
 
   async function polishOne(text) {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+    const res = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
+        'Authorization': 'Bearer ' + OPENAI_API_KEY
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
-        max_tokens: 1000,
+        model: OPENAI_MODEL,
+        max_tokens: 100,
+        temperature: 0.2,
         messages: [{
+          role: 'system',
+          content: 'Return only valid JSON. No preamble, no markdown, no code fences.'
+        }, {
           role: 'user',
           content:
             'Rewrite this single goal so it is concrete, action-oriented, and under 60 characters. ' +
@@ -1489,8 +1492,9 @@ body::after {
         }]
       })
     });
+    if (!res.ok) throw new Error('OpenAI request failed');
     const data = await res.json();
-    const content = (data && data.content && data.content[0] && data.content[0].text) || '';
+    const content = (data && data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
     const arr = JSON.parse(content);
     if (!Array.isArray(arr) || arr.length < 1 || typeof arr[0] !== 'string') throw new Error('bad response');
     return arr[0].trim();
@@ -1515,9 +1519,9 @@ body::after {
     polishBtn.addEventListener('click', async () => {
       const text = input.value.trim();
       if (!text) return;
-      if (!ANTHROPIC_API_KEY) {
+      if (!OPENAI_API_KEY) {
         plainAdd(text);
-        showStatus(statusEl, 'Polish needs an Anthropic API key — added as-typed.', false);
+        showStatus(statusEl, 'Polish needs an OpenAI API key — added as-typed.', false);
         return;
       }
       polishBtn.disabled = true;

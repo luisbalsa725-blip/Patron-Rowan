@@ -519,10 +519,11 @@ body {
 const STORAGE_KEY = 'finance_standalone_v1';
 const ACTIVITY_MAX = 50;
 const NW_HISTORY_MAX = 500;
-const CURRENCIES = ['CHF', 'USD', 'EUR', 'GBP'];
+const DEFAULT_CURRENCY = 'AUD';
+const CURRENCIES = ['AUD', 'CHF', 'USD', 'EUR', 'GBP'];
 const TAB_KEYS = ['net', 'subs', 'orders', 'wish'];
 const TAB_LABELS = { net: 'net worth', subs: 'subs', orders: 'orders', wish: 'wishlist' };
-const DEFAULT_RATES = { CHF: 1, USD: 1, EUR: 1, GBP: 1 };
+const DEFAULT_RATES = { CHF: 1, AUD: 1, USD: 1, EUR: 1, GBP: 1 };
 
 function genId(prefix) { return (prefix || 'id') + '_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
 
@@ -586,7 +587,7 @@ function esc(s) { return String(s == null ? '' : s).replace(/&/g,'&amp;').replac
 /* ============================================================
  * State + persistence
  * ============================================================ */
-const DEFAULT_STATE = { version: 1, currency: 'CHF', activeTab: 'net', accounts: [], subscriptions: [], orders: [], wishlist: [], activity: [], netWorthHistory: [] };
+const DEFAULT_STATE = { version: 1, currency: DEFAULT_CURRENCY, activeTab: 'net', accounts: [], subscriptions: [], orders: [], wishlist: [], activity: [], netWorthHistory: [] };
 
 function load() {
   try { const raw = localStorage.getItem(STORAGE_KEY); if (!raw) return Object.assign({}, DEFAULT_STATE); return Object.assign({}, DEFAULT_STATE, JSON.parse(raw)); }
@@ -599,10 +600,13 @@ let rates = Object.assign({}, DEFAULT_RATES);
 
 /* ---- API keys / settings (stored only in this browser) ---- */
 const SETTINGS_KEY = 'finance_settings_v1';
-const DEFAULT_MODEL = 'claude-haiku-4-5'; // cheapest vision-capable model — never use Sonnet/Opus for OCR
+const DEFAULT_MODEL = 'gpt-4o-mini';
 function loadSettings() {
-  try { return Object.assign({ finnhubKey: '', anthropicKey: '', anthropicModel: DEFAULT_MODEL }, JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}')); }
-  catch { return { finnhubKey: '', anthropicKey: '', anthropicModel: DEFAULT_MODEL }; }
+  try {
+    const saved = JSON.parse(localStorage.getItem(SETTINGS_KEY) || '{}');
+    return Object.assign({ finnhubKey: '', openaiKey: '', openaiModel: DEFAULT_MODEL }, saved);
+  }
+  catch { return { finnhubKey: '', openaiKey: '', openaiModel: DEFAULT_MODEL }; }
 }
 function saveSettings() { try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(settings)); } catch {} }
 let settings = loadSettings();
@@ -790,7 +794,7 @@ function headerHtml() {
   const themeSeg = THEMES.map(t => '<button type="button" class="themeBtn ' + (t.key === currentTheme ? 'themeBtnActive' : '') + '" data-act="theme" data-theme="' + t.key + '"><span class="themeSwatch" style="background:' + t.swatch + '"></span>' + t.label + '</button>').join('');
   const segs = CURRENCIES.map(c => '<button type="button" class="currencyBtn ' + (c === state.currency ? 'currencyBtnActive' : '') + '" data-act="currency" data-c="' + c + '">' + c + '</button>').join('');
   return '<header class="header"><div class="headerLeft">'
-    + '<a class="back" href="index.html"><span class="backArrow">←</span> Rowan</a>'
+    + '<a class="back" href="index.html"><span class="backArrow">←</span> Dashboard</a>'
     + '<h1 class="title">Finance</h1><p class="subtitle">Net worth · subs · orders · wishlist</p>'
     + '</div>'
     + '<div class="headerRight">'
@@ -1232,9 +1236,9 @@ function wishViewHtml() {
  * Import modal (placeholder — AI import is hosted-app only)
  * ============================================================ */
 const IMPORT_COPY = {
-  statement: { eyebrow: 'Import', title: 'Read a <em>statement</em> screenshot', desc: 'Drop a bank/brokerage screenshot and Claude reads every account and balance, then fills them in automatically.', dropTitle: 'Drop a statement screenshot' },
-  subs: { eyebrow: 'Import', title: 'Pull <em>subscriptions</em> from a screenshot', desc: 'Snap your billing page and Claude detects every recurring subscription and adds them at once.', dropTitle: 'Drop a billing screenshot' },
-  receipt: { eyebrow: 'Import', title: 'Auto-log a <em>receipt</em>', desc: 'Snap a receipt and Claude logs the purchase to your orders automatically.', dropTitle: 'Drop a receipt screenshot' },
+  statement: { eyebrow: 'Import', title: 'Read a <em>statement</em> screenshot', desc: 'Drop a bank/brokerage screenshot and OpenAI reads every account and balance, then fills them in automatically.', dropTitle: 'Drop a statement screenshot' },
+  subs: { eyebrow: 'Import', title: 'Pull <em>subscriptions</em> from a screenshot', desc: 'Snap your billing page and OpenAI detects every recurring subscription and adds them at once.', dropTitle: 'Drop a billing screenshot' },
+  receipt: { eyebrow: 'Import', title: 'Auto-log a <em>receipt</em>', desc: 'Snap a receipt and OpenAI logs the purchase to your orders automatically.', dropTitle: 'Drop a receipt screenshot' },
 };
 /* ------------------------------------------------------------------
  * Cheapest-possible screenshot OCR (see runImport for the full rationale).
@@ -1247,13 +1251,13 @@ const IMPORT_COPY = {
  * per-kind hint rides in the cheap, uncached user turn.
  * ------------------------------------------------------------------ */
 const EXTRACT_SYSTEM = [
-  'You are a precise financial-screenshot OCR extractor. You read ONE screenshot of a bank/brokerage statement, a subscriptions/billing page, or a purchase receipt, and return its line items by calling the `extract` tool. Output the tool call only — never prose.',
+  'You are a precise financial-screenshot OCR extractor. You read ONE screenshot of a bank/brokerage statement, a subscriptions/billing page, or a purchase receipt, and return a JSON object with an items array. Output JSON only — never prose.',
   '',
   'Each element of `items`:',
   '- t: category — "bank","stocks","crypto","other" for statement/balance lines; "sub" for a recurring subscription; "order" for a receipt/purchase.',
   '- n: short name (account, holding, service, or merchant). No amounts inside the name.',
   '- a: numeric amount, no thousands separators or currency symbols (e.g. 1234.50).',
-  '- c: ISO currency inferred from symbols/text — "CHF","USD","EUR","GBP". Omit if unsure.',
+  '- c: ISO currency inferred from symbols/text — "AUD","CHF","USD","EUR","GBP". Omit if unsure.',
   '- p: billing period, subscriptions only — "monthly","yearly","weekly". Omit otherwise.',
   '',
   'Rules: one item per distinct line; skip totals that merely sum other lines; omit any field you are unsure of (never emit null or empty strings); if nothing is readable, return an empty items array.',
@@ -1281,7 +1285,7 @@ const EXTRACT_TOOL = {
             t: { type: 'string', enum: ['bank', 'stocks', 'crypto', 'other', 'sub', 'order'] },
             n: { type: 'string' },
             a: { type: 'number' },
-            c: { type: 'string', enum: ['CHF', 'USD', 'EUR', 'GBP'] },
+            c: { type: 'string', enum: ['AUD', 'CHF', 'USD', 'EUR', 'GBP'] },
             p: { type: 'string', enum: ['monthly', 'yearly', 'weekly'] },
           },
           required: ['t', 'n', 'a'],
@@ -1305,7 +1309,7 @@ function renderModal() {
 }
 
 function settingsModalHtml() {
-  const fSet = !!settings.finnhubKey, aSet = !!settings.anthropicKey;
+  const fSet = !!settings.finnhubKey, aSet = !!settings.openaiKey;
   function field(id, label, set, value, type, placeholder, hint) {
     return '<div class="fieldGroup"><div class="fieldLabelRow"><span class="fieldLabel">' + label + '</span>'
       + '<span class="keyStatus ' + (set ? 'set' : 'unset') + '">' + (set ? 'set' : 'not set') + '</span></div>'
@@ -1314,10 +1318,10 @@ function settingsModalHtml() {
   }
   return '<div class="importOverlay" data-act="closeSettings"><div class="importPanel" data-stop="1">'
     + '<div class="importHead"><div><div class="importEyebrow">Settings</div><h2 class="importTitle">API <em>keys</em></h2></div><button type="button" class="importClose" data-act="closeSettings">×</button></div>'
-    + '<p class="importDesc">Add your own keys to unlock live stock prices and AI screenshot import. Keys are stored only in this browser and sent directly from your device to Finnhub / Anthropic — never to any other server.</p>'
+    + '<p class="importDesc">Add your own keys to unlock live stock prices and AI screenshot import. Keys are stored only in this browser and sent directly from your device to Finnhub / OpenAI — never to any other server.</p>'
     + field('settings-finnhub', 'Finnhub key · live stock prices', fSet, settings.finnhubKey, 'password', 'paste your Finnhub API key', 'Free key at <a href="https://finnhub.io/register" target="_blank" rel="noopener">finnhub.io/register</a>. Powers the holdings ↻ refresh prices button (US-listed symbols).')
-    + field('settings-anthropic', 'Anthropic key · AI screenshot import', aSet, settings.anthropicKey, 'password', 'paste your Anthropic API key (sk-ant-…)', 'Key at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. Powers reading statements / subs / receipts from a screenshot.')
-    + field('settings-model', 'Anthropic model', !!settings.anthropicModel, settings.anthropicModel, 'text', DEFAULT_MODEL, 'Vision-capable model used for import. Change it if your account uses a different model id.')
+    + field('settings-openai', 'OpenAI key · AI screenshot import', aSet, settings.openaiKey, 'password', 'paste your OpenAI API key (sk-…)', 'Key at <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener">platform.openai.com/api-keys</a>. Powers reading statements / subs / receipts from a screenshot.')
+    + field('settings-model', 'OpenAI model', !!settings.openaiModel, settings.openaiModel, 'text', DEFAULT_MODEL, 'Vision-capable model used for import. Change it if your account uses a different model id.')
     + '<div class="settingsActions"><button type="button" class="ghostBtn" data-act="closeSettings">Cancel</button><button type="button" class="quickAddBtn" style="height:38px" data-act="saveSettings">Save keys</button></div>'
     + '</div></div>';
 }
@@ -1325,22 +1329,22 @@ function settingsModalHtml() {
 function importModalHtml() {
   const c = IMPORT_COPY[ui.importOpen];
   let body;
-  if (!settings.anthropicKey) {
-    body = '<div class="dropZone"><div class="dropIcon">↗</div><div class="dropTitle">Screenshot import</div><div class="dropSub">needs an Anthropic key</div></div>'
-      + '<p class="setupNote"><strong>One-time setup:</strong> AI import calls Claude with your own Anthropic API key. Add it in settings — it stays in this browser and is sent straight to Anthropic. Everything else here works offline.</p>'
-      + '<div class="settingsActions"><button type="button" class="quickAddBtn" style="height:38px" data-act="openSettings">Add Anthropic key</button></div>';
+  if (!settings.openaiKey) {
+    body = '<div class="dropZone"><div class="dropIcon">↗</div><div class="dropTitle">Screenshot import</div><div class="dropSub">needs an OpenAI key</div></div>'
+      + '<p class="setupNote"><strong>One-time setup:</strong> AI import calls OpenAI with your own API key. Add it in settings — it stays in this browser and is sent straight to OpenAI. Everything else here works offline.</p>'
+      + '<div class="settingsActions"><button type="button" class="quickAddBtn" style="height:38px" data-act="openSettings">Add OpenAI key</button></div>';
   } else if (ui.importBusy) {
-    body = '<div class="importStatus"><div class="importSpinner"></div><div class="importStatusTitle">Reading your screenshot…</div><div class="importStatusBody">Claude is extracting the data. This usually takes a few seconds.</div></div>';
+    body = '<div class="importStatus"><div class="importSpinner"></div><div class="importStatusTitle">Reading your screenshot…</div><div class="importStatusBody">OpenAI is extracting the data. This usually takes a few seconds.</div></div>';
   } else if (ui.importError) {
     body = '<div class="importStatus error"><div class="importStatusTitle">Import failed</div><div class="importStatusBody">' + esc(ui.importError) + '</div></div>'
       + '<label class="dropZone clickable"><input type="file" accept="image/*" data-importfile="' + ui.importOpen + '" style="display:none" /><div class="dropIcon">↗</div><div class="dropTitle">Try another screenshot</div><div class="dropSub">PNG · JPG</div></label>';
   } else if (ui.importResult) {
-    body = '<div class="importStatus"><div class="dropIcon" style="width:50px;height:50px;font-size:24px">✓</div><div class="importStatusTitle">Added ' + ui.importResult.count + ' ' + esc(ui.importResult.noun) + '</div><div class="importStatusBody">' + (ui.importResult.count ? 'Review them below — every value is editable.' : 'Claude couldn\'t read any items from that image. Try a clearer screenshot.') + '</div></div>'
+    body = '<div class="importStatus"><div class="dropIcon" style="width:50px;height:50px;font-size:24px">✓</div><div class="importStatusTitle">Added ' + ui.importResult.count + ' ' + esc(ui.importResult.noun) + '</div><div class="importStatusBody">' + (ui.importResult.count ? 'Review them below — every value is editable.' : 'OpenAI could not read any items from that image. Try a clearer screenshot.') + '</div></div>'
       + '<div class="settingsActions"><button type="button" class="ghostBtn" data-act="closeImport">Done</button><label class="quickAddBtn" style="height:38px;display:inline-flex;align-items:center;cursor:pointer"><input type="file" accept="image/*" data-importfile="' + ui.importOpen + '" style="display:none" />Import another</label></div>';
   } else {
     body = '<p class="importDesc">' + c.desc + '</p>'
       + '<label class="dropZone clickable"><input type="file" accept="image/*" data-importfile="' + ui.importOpen + '" style="display:none" /><div class="dropIcon">↗</div><div class="dropTitle">' + c.dropTitle + '</div><div class="dropSub">click to choose · PNG · JPG</div></label>'
-      + '<p class="setupNote">Sent directly to Anthropic with your key (model <strong>' + esc(settings.anthropicModel || DEFAULT_MODEL) + '</strong>). Nothing is uploaded anywhere else.</p>';
+      + '<p class="setupNote">Sent directly to OpenAI with your key (model <strong>' + esc(settings.openaiModel || DEFAULT_MODEL) + '</strong>). Nothing is uploaded anywhere else.</p>';
   }
   return '<div class="importOverlay" data-act="closeImport"><div class="importPanel" data-stop="1">'
     + '<div class="importHead"><div><div class="importEyebrow">' + c.eyebrow + '</div><h2 class="importTitle">' + c.title + '</h2></div><button type="button" class="importClose" data-act="closeImport">×</button></div>'
@@ -1378,7 +1382,7 @@ async function refreshStockPrices(opts) {
 }
 
 /* ============================================================
- * AI screenshot import (Anthropic) — direct from the browser
+ * AI screenshot import (OpenAI) — direct from the browser
  * ============================================================ */
 function openSettings() { ui.settingsOpen = true; renderModal(); }
 function fileToDataUrl(file) { return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(r.result); r.onerror = rej; r.readAsDataURL(file); }); }
@@ -1406,7 +1410,7 @@ async function downscaleImage(file) {
   return { mediaType: m[1], b64: m[2], w: tw, h: th };
 }
 
-function ccyOf(v) { const c = String(v || '').toUpperCase(); return CURRENCIES.indexOf(c) >= 0 ? c : 'CHF'; }
+function ccyOf(v) { const c = String(v || '').toUpperCase(); return CURRENCIES.indexOf(c) >= 0 ? c : DEFAULT_CURRENCY; }
 function applyImport(kind, items) {
   if (!Array.isArray(items)) return 0;
   let n = 0;
@@ -1435,59 +1439,41 @@ function applyImport(kind, items) {
 }
 
 /* ============================================================
- * runImport — cheapest-possible bank-statement / receipt OCR.
- *
- * Cost optimizations (input image ≫ everything else, so we attack it first):
- *  1. Model: Claude Haiku 4.5 ($1/$5 per 1M) — never Sonnet/Opus for OCR.
- *  2. Downscale the screenshot to ~1024px long edge + re-encode JPEG BEFORE
- *     upload (downscaleImage). ~4k image tokens → ~1k. Biggest single lever.
- *  3. Prompt caching: the instructions + schema + few-shot live in a
- *     cache_control:ephemeral system block, byte-identical every call, shared
- *     across all three import kinds. (Haiku's cache minimum is 4096 tokens, so
- *     this lean block won't actually cache until it grows — harmless, and the
- *     dev log shows cache_read so you can see if/when it engages.)
- *  4. Forced structured output: tool_choice pins the `extract` tool, so the
- *     model must emit one schema-shaped object — no prose. max_tokens 500,
- *     temperature 0 (effort param is NOT sent — it errors on Haiku).
- *  5. Compact JSON: short keys (t,n,a,c,p), optional fields omitted, no nulls —
- *     output tokens are the priciest part.
- *  Robustness: parse the tool_use block; on a malformed/empty result retry
- *  once, then surface { error }. Auth errors (401/403) are not retried.
- *  NOTE: keys are server-side-only in the hosted Rowan app; this is the
- *  standalone, so the call is browser-direct with the user's own key. There is
- *  no route handler / sharp / tier-gate here — those are hosted-app concerns.
+ * runImport — bank-statement / receipt OCR.
+ * The screenshot is downscaled in-browser, then sent directly to OpenAI with
+ * the user's own key. The model is asked for compact JSON: { items: [...] }.
  * ============================================================ */
 async function callExtract(kind, img) {
-  const r = await fetch('https://api.anthropic.com/v1/messages', {
+  const r = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'content-type': 'application/json',
-      'x-api-key': settings.anthropicKey,
-      'anthropic-version': '2023-06-01',
-      'anthropic-dangerous-direct-browser-access': 'true',
+      'Authorization': 'Bearer ' + settings.openaiKey,
     },
     body: JSON.stringify({
-      model: settings.anthropicModel || DEFAULT_MODEL,
+      model: settings.openaiModel || DEFAULT_MODEL,
       max_tokens: 500,
       temperature: 0,
-      system: [{ type: 'text', text: EXTRACT_SYSTEM, cache_control: { type: 'ephemeral' } }],
-      tools: [EXTRACT_TOOL],
-      tool_choice: { type: 'tool', name: 'extract' },
-      messages: [{ role: 'user', content: [
-        { type: 'image', source: { type: 'base64', media_type: img.mediaType, data: img.b64 } },
-        { type: 'text', text: KIND_HINT[kind] },
-      ] }],
+      response_format: { type: 'json_object' },
+      messages: [
+        { role: 'system', content: EXTRACT_SYSTEM },
+        { role: 'user', content: [
+          { type: 'text', text: KIND_HINT[kind] + '\n\nReturn exactly this shape: {"items":[{"t":"bank","n":"Name","a":123.45,"c":"AUD"}]}' },
+          { type: 'image_url', image_url: { url: 'data:' + img.mediaType + ';base64,' + img.b64 } },
+        ] },
+      ],
     }),
   });
   const j = await r.json();
-  if (j.error) { const e = new Error(j.error.message || ('Anthropic API error (HTTP ' + r.status + ')')); e.status = r.status; throw e; }
-  if (IS_DEV) { const u = j.usage || {}; console.log('[finance import] ' + kind + ' ' + img.w + '×' + img.h, { in: u.input_tokens, out: u.output_tokens, cache_write: u.cache_creation_input_tokens, cache_read: u.cache_read_input_tokens }); }
-  const block = (j.content || []).find(b => b.type === 'tool_use' && b.name === 'extract');
-  if (!block || !block.input || !Array.isArray(block.input.items)) throw new Error('The model did not return the expected structure.');
-  return block.input.items;
+  if (j.error) { const e = new Error(j.error.message || ('OpenAI API error (HTTP ' + r.status + ')')); e.status = r.status; throw e; }
+  if (IS_DEV) { const u = j.usage || {}; console.log('[finance import] ' + kind + ' ' + img.w + '×' + img.h, { in: u.prompt_tokens, out: u.completion_tokens }); }
+  const content = j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content;
+  const parsed = JSON.parse(content || '{}');
+  if (!parsed || !Array.isArray(parsed.items)) throw new Error('The model did not return the expected structure.');
+  return parsed.items;
 }
 async function runImport(kind, file) {
-  if (!settings.anthropicKey || !file) return;
+  if (!settings.openaiKey || !file) return;
   ui.importBusy = true; ui.importError = null; ui.importResult = null; renderModal();
   try {
     const img = await downscaleImage(file);
@@ -1620,11 +1606,11 @@ document.addEventListener('click', e => {
     case 'closeSettings': if (!stop || e.target.closest('.importClose')) { ui.settingsOpen = false; renderModal(); } break;
     case 'saveSettings': {
       const fk = document.getElementById('settings-finnhub');
-      const ak = document.getElementById('settings-anthropic');
+      const ak = document.getElementById('settings-openai');
       const mk = document.getElementById('settings-model');
       settings.finnhubKey = fk ? fk.value.trim() : settings.finnhubKey;
-      settings.anthropicKey = ak ? ak.value.trim() : settings.anthropicKey;
-      settings.anthropicModel = (mk && mk.value.trim()) || DEFAULT_MODEL;
+      settings.openaiKey = ak ? ak.value.trim() : settings.openaiKey;
+      settings.openaiModel = (mk && mk.value.trim()) || DEFAULT_MODEL;
       saveSettings(); ui.settingsOpen = false; renderModal();
       break;
     }
@@ -1703,7 +1689,7 @@ fetch('https://open.er-api.com/v6/latest/CHF')
   .then(r => r.json())
   .then(data => {
     if (data && data.rates) {
-      rates = { CHF: 1, USD: data.rates.USD || 1, EUR: data.rates.EUR || 1, GBP: data.rates.GBP || 1 };
+      rates = { CHF: 1, AUD: data.rates.AUD || 1, USD: data.rates.USD || 1, EUR: data.rates.EUR || 1, GBP: data.rates.GBP || 1 };
       render();
       // Now that USD→CHF is known, refresh live holdings prices if a key is set.
       if (settings.finnhubKey && state.accounts.some(a => a.type === 'stocks' && a.ticker)) refreshStockPrices({ silent: true });
