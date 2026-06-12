@@ -417,13 +417,18 @@ function vitalsTileHtml(){
 }
 
 /* ---- Live stats read from each app's own localStorage (defensive; tagline if unavailable) ---- */
+let financeRates = { AUD: 1, CHF: 1, USD: 1, EUR: 1, GBP: 1 };
 function lsGet(key){ try { const r = localStorage.getItem(key); return r ? JSON.parse(r) : null; } catch(e){ return null; } }
 function fmtNum(n){ return Math.round(n).toLocaleString('en-US'); }
+function fmtFinanceAmount(amountCHF){
+  const amount = (Number(amountCHF) || 0) * (financeRates.AUD || 1);
+  return 'AUD ' + fmtNum(amount);
+}
 function localDateKey(d){ d = d || new Date(); return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
 function activeDateKey(){ const d = new Date(); if (d.getHours() < 6) d.setDate(d.getDate() - 1); return localDateKey(d); }
 function statFor(file){
   try {
-    if (file === 'finance.html') { const s = lsGet('finance_standalone_v1'); if (s && Array.isArray(s.accounts) && s.accounts.length) { const nw = s.accounts.reduce((a,x)=>a+(Number(x.amountCHF)||0),0); return { value: 'CHF ' + fmtNum(nw), label: 'net worth' }; } }
+    if (file === 'finance.html') { const s = lsGet('finance_standalone_v1'); if (s && Array.isArray(s.accounts) && s.accounts.length) { const nw = s.accounts.reduce((a,x)=>a+(Number(x.amountCHF)||0),0); return { value: fmtFinanceAmount(nw), label: 'net worth' }; } }
     else if (file === 'supplements.html') { const s = lsGet('supplements_standalone_v1'); if (s && Array.isArray(s.items) && s.items.length) { const tk = (s.taken && s.taken[activeDateKey()]) || {}; const n = s.items.filter(i => tk[i.id]).length; return { value: n + '/' + s.items.length, label: 'taken today' }; } }
     else if (file === 'water.html') { const s = lsGet('water_standalone_v1'); if (s && s.logs) { const n = s.logs[localDateKey()] || 0; return { value: String(n), label: (n === 1 ? 'drink' : 'drinks') + ' today' }; } }
     else if (file === 'whoop.html') { if (health && health.recovery != null) return { value: Math.round(health.recovery) + '%', label: 'recovery' }; }
@@ -476,7 +481,7 @@ function tickerMetrics(){
   }
   try {
     const fin = lsGet('finance_standalone_v1');
-    if (fin && Array.isArray(fin.accounts) && fin.accounts.length){ const nw = fin.accounts.reduce((a,x)=>a+(Number(x.amountCHF)||0),0); add('NET', 'CHF ' + fmtNum(nw), '', 'good'); }
+    if (fin && Array.isArray(fin.accounts) && fin.accounts.length){ const nw = fin.accounts.reduce((a,x)=>a+(Number(x.amountCHF)||0),0); add('NET', fmtFinanceAmount(nw), '', 'good'); }
     const wat = lsGet('water_standalone_v1');
     if (wat && wat.logs){ const n = wat.logs[localDateKey()] || 0; add('H2O', String(n), n === 1 ? 'drink' : 'drinks', 'brand'); }
     const sup = lsGet('supplements_standalone_v1');
@@ -521,6 +526,24 @@ function render(){
   document.getElementById('app').innerHTML =
     headerHtml() + tickerHtml() + remindersHtml() + '<div class="bento">' + vitalsTileHtml() + APPS.map(cardHtml).join('') + '</div>';
   renderModal();
+}
+
+function loadFinanceRates(){
+  fetch('https://open.er-api.com/v6/latest/CHF')
+    .then(r => r.json())
+    .then(data => {
+      if (data && data.rates) {
+        financeRates = {
+          CHF: 1,
+          AUD: data.rates.AUD || 1,
+          USD: data.rates.USD || 1,
+          EUR: data.rates.EUR || 1,
+          GBP: data.rates.GBP || 1
+        };
+        render();
+      }
+    })
+    .catch(() => {});
 }
 
 /* ============================================================
@@ -753,6 +776,7 @@ window.addEventListener('storage', e => {
 
 if (!profile) { ui.profileDraft = draftFromProfile(); ui.profileOpen = true; } // first run → onboarding prompt (init draft so typing is captured)
 applyTheme(currentTheme);
+loadFinanceRates();
 
 // On a deployed host: pick up the OAuth return + pull the latest Whoop / Fitbit vitals.
 (function bootVitals(){
